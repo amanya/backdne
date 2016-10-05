@@ -4,10 +4,10 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm
 from .. import db
 from ..decorators import admin_required
-from ..models import Role, User
+from ..models import Role, User, School, Permission
 
 
 @main.after_app_request
@@ -41,6 +41,28 @@ def index():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     return render_template('user.html', user=user)
+
+
+@main.route('/school/<id>', methods=['GET', 'POST'])
+def school(id):
+    school = School.query.filter_by(id=id).first_or_404()
+    return render_template('school.html', school=school)
+
+
+@main.route('/schools', methods=['GET', 'POST'])
+def schools():
+    form = SchoolForm()
+    if current_user.can(Permission.CREATE_SCHOOLS) and form.validate_on_submit():
+        school = School(name=form.name.data, description=form.description.data)
+        db.session.add(school)
+        return redirect(url_for('.index'))
+    page = request.args.get('page', 1, type=int)
+    query = School.query
+    pagination = query.order_by(School.timestamp.desc()).paginate(
+        page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
+        error_out=False)
+    schools = pagination.items
+    return render_template('schools.html', form=form, schools=schools, pagination=pagination)
 
 
 @main.route('/edit-profile', methods=['GET', 'POST'])

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Backend{% endblock %}
+
+{% block page_content %}
+<div>
+    {% if current_user.can(Permission.CREATE_SCHOOLS) %}
+    {{ wtf.quick_form(form) }}
+    {% endif %}
+</div>
+<div class="school-tabs">
+    {% include '_schools.html' %}
+</div>
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.index') }}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{{ pagedown.include_pagedown() }}
+{% endblock %}

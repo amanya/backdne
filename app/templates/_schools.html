@@ -1,0 +1,11 @@
+<ul class="posts">
+    {% for school in schools %}
+    <li class="post">
+        <div class="school-content">
+            <div class="t-date">{{ moment(school.timestamp).fromNow() }}</div>
+            <div class="school-name"><a href="{{ url_for('.school', id=school.id) }}">{{ school.name }}</a></div>
+            <div class="school-description">{{ school.description }}</div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>

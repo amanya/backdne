@@ -158,3 +158,33 @@ class UserModelTestCase(unittest.TestCase):
         json_user = u.to_json()
         expected_keys = ['username', 'member_since', 'last_seen']
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
+
+    def test_is_teacher(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        u = User(email='john@example.com', password='cat')
+        u.role = role
+        self.assertTrue(u.is_teacher())
+
+    def test_is_not_teacher(self):
+        role = Role.query.filter_by(name='Student').first()
+        u = User(email='john@example.com', password='cat')
+        u.role = role
+        self.assertFalse(u.is_teacher())
+
+    def test_is_student(self):
+        role = Role.query.filter_by(name='Student').first()
+        u = User(email='john@example.com', password='cat')
+        u.role = role
+        self.assertTrue(u.is_student())
+
+    def test_is_not_student(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        u = User(email='john@example.com', password='cat')
+        u.role = role
+        self.assertFalse(u.is_student())
+
+    def test_user_is_teacher_by_default(self):
+        u = User(email='john@example.com', password='cat')
+        role = Role.query.filter_by(name='Student').first()
+        self.assertEquals(role, u.role)
+

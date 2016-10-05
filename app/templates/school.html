@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Backend - {{ school.name }}{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <div>
+        <h1>{{ school.name }}</h1>
+        {% if school.description %}
+        <p>
+            {{ school.description }}
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

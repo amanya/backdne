@@ -13,7 +13,8 @@ from . import db, login_manager
 class Permission:
     EXIST = 0x01
     CREATE_USERS = 0x02
-    ADMINISTER = 0x04
+    CREATE_SCHOOLS = 0x04
+    ADMINISTER = 0x08
 
 
 class Role(db.Model):
@@ -176,6 +177,12 @@ class User(UserMixin, db.Model):
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
 
+    def is_student(self):
+        return self.role.name == 'Student'
+
+    def is_teacher(self):
+        return self.role.name == 'Teacher'
+
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
@@ -274,6 +281,30 @@ class School(db.Model):
                        author=u)
             db.session.add(p)
             db.session.commit()
+
+    @property
+    def teachers(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        res = User.query.join(UserSchool, UserSchool.user_id == User.id).filter(User.role_id == role.id)
+        return res
+
+    @property
+    def students(self):
+        role = Role.query.filter_by(name='Student').first()
+        res = User.query.join(UserSchool, UserSchool.user_id == User.id).filter(User.role_id == role.id)
+        return res
+
+    def add_teacher(self, user):
+        if not user.is_teacher():
+            raise ValidationError('User is not a teacher')
+        u2s = UserSchool(user=user, school=self)
+        db.session.add(u2s)
+
+    def add_student(self, user):
+        if not user.is_student():
+            raise ValidationError('User is not a student')
+        u2s = UserSchool(user=user, school=self)
+        db.session.add(u2s)
 
     def to_json(self):
         json_school = {

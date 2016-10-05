@@ -46,8 +46,9 @@ class EditProfileAdminForm(Form):
             raise ValidationError('Username already in use.')
 
 
-class PostForm(Form):
-    body = PageDownField("What's on your mind?", validators=[Required()])
+class SchoolForm(Form):
+    name = StringField('Name of the school', validators=[Length(0, 64)])
+    description = PageDownField("Description", validators=[Required()])
     submit = SubmitField('Submit')
 
 
