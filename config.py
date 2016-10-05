@@ -7,14 +7,14 @@ class Config:
     SSL_DISABLE = False
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
-    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_SERVER = 'smtp.fastmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     BACKEND_MAIL_SUBJECT_PREFIX = '[Backend]'
-    BACKEND_MAIL_SENDER = 'Backend Admin <albert77@gmail.com>'
     BACKEND_ADMIN = os.environ.get('BACKEND_ADMIN')
+    BACKEND_MAIL_SENDER = 'Backend Admin <{}>'.format(BACKEND_ADMIN)
     BACKEND_POSTS_PER_PAGE = 20
     BACKEND_FOLLOWERS_PER_PAGE = 50
     BACKEND_COMMENTS_PER_PAGE = 30
