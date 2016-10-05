@@ -41,6 +41,8 @@ nosetests.xml
 # Virtual environment
 venv
 
+.env
+
 # Idea
 .idea
 
