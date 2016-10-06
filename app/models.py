@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.exceptions import ValidationError
@@ -34,7 +35,7 @@ class Role(db.Model):
             'Administrator': (0xff, False)
         }
         for r in roles:
-            role = Role.query.filter_by(name=r).first()
+            role = Role.get(r)
             if role is None:
                 role = Role(name=r)
             role.permissions = roles[r][0]
@@ -42,17 +43,24 @@ class Role(db.Model):
             db.session.add(role)
         db.session.commit()
 
+    @staticmethod
+    def get(item):
+        role = Role.query.filter_by(name=item).first()
+        if role and role.name == item:
+            return role
+
     def __repr__(self):
         return '<Role %r>' % self.name
 
 
 class UserSchool(db.Model):
     __tablename__ = 'users_schools'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                        primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'),
-                          primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), primary_key=True)
+    created = db.Column(db.DateTime, default=func.now())
+    updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    user = db.relationship('User', back_populates='schools')
+    school = db.relationship('School', back_populates='users')
 
 
 class User(UserMixin, db.Model):
@@ -64,14 +72,11 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
-    member_since = db.Column(db.DateTime(), default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
-    schools = db.relationship('UserSchool',
-                              foreign_keys=[UserSchool.user_id],
-                              backref=db.backref('user', lazy='joined'),
-                              lazy='dynamic',
-                              cascade='all, delete-orphan')
+    created = db.Column(db.DateTime, default=func.now())
+    updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    schools = db.relationship('UserSchool', back_populates="user")
+
 
     @staticmethod
     def generate_fake(count=100):
@@ -80,18 +85,20 @@ class User(UserMixin, db.Model):
         import forgery_py
 
         seed()
-        for i in range(count):
-            u = User(email=forgery_py.internet.email_address(),
-                     username=forgery_py.internet.user_name(True),
-                     password=forgery_py.lorem_ipsum.word(),
-                     confirmed=True,
-                     name=forgery_py.name.full_name(),
-                     member_since=forgery_py.date.date(True))
-            db.session.add(u)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
+        for role in [Role.get('Student'), Role.get('Teacher')]:
+            for i in range(count):
+                u = User(email=forgery_py.internet.email_address(),
+                         username=forgery_py.internet.user_name(True),
+                         password=forgery_py.lorem_ipsum.word(),
+                         confirmed=True,
+                         name=forgery_py.name.full_name(),
+                         created=forgery_py.date.date(True),
+                         role=role)
+                db.session.add(u)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -101,8 +108,7 @@ class User(UserMixin, db.Model):
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
         if self.email is not None and self.avatar_hash is None:
-            self.avatar_hash = hashlib.md5(
-                self.email.encode('utf-8')).hexdigest()
+            self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
 
     @property
     def password(self):
@@ -184,7 +190,7 @@ class User(UserMixin, db.Model):
         return self.role.name == 'Teacher'
 
     def ping(self):
-        self.last_seen = datetime.utcnow()
+        self.updated = datetime.utcnow()
         db.session.add(self)
 
     def gravatar(self, size=100, default='identicon', rating='g'):
@@ -214,8 +220,8 @@ class User(UserMixin, db.Model):
     def to_json(self):
         json_user = {
             'username': self.username,
-            'member_since': self.member_since,
-            'last_seen': self.last_seen,
+            'created': self.created,
+            'updated': self.updated,
         }
         return json_user
 
@@ -232,6 +238,16 @@ class User(UserMixin, db.Model):
         except:
             return None
         return User.query.get(data['id'])
+
+    @staticmethod
+    def teachers():
+        role = Role.get('Teacher')
+        return User.query.filter(User.role_id == role.id)
+
+    @staticmethod
+    def students():
+        role = Role.get('Student')
+        return User.query.filter(User.role_id == role.id)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -256,48 +272,54 @@ def load_user(user_id):
 class School(db.Model):
     __tablename__ = 'schools'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
+    enabled = db.Column(db.Boolean, default=True)
+    name = db.Column(db.String(254))
+    address = db.Column(db.String(254))
+    email = db.Column(db.String(64), unique=True, index=True)
     description = db.Column(db.Text())
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
-    users = db.relationship('UserSchool',
-                            foreign_keys=[UserSchool.school_id],
-                            backref=db.backref('school', lazy='joined'),
-                            lazy='dynamic',
-                            cascade='all, delete-orphan')
+    created = db.Column(db.DateTime, default=func.now())
+    updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    users = db.relationship('UserSchool', back_populates="school", lazy="dynamic")
 
     @staticmethod
-    def generate_fake(count=100):
-        from random import seed, randint
+    def generate_fake(count=10):
+        from random import seed, randint, sample
         import forgery_py
 
         seed()
-        user_count = User.query.count()
         for i in range(count):
-            u = User.query.offset(randint(0, user_count - 1)).first()
-            p = School(name=forgery_py.internet.user_name(),
+            teachers = sample(list(User.teachers()), randint(5, 10))
+            students = sample(list(User.students()), randint(10, 30))
+            s = School(name=forgery_py.internet.user_name(),
                        description=forgery_py.lorem_ipsum.sentences(5),
-                       timestamp=forgery_py.date.date(True),
-                       author=u)
-            db.session.add(p)
+                       created=forgery_py.date.date(True))
+            for teacher in teachers:
+                s.add_teacher(teacher)
+            for student in students:
+                s.add_student(student)
+            db.session.add(s)
             db.session.commit()
 
     @property
     def teachers(self):
-        role = Role.query.filter_by(name='Teacher').first()
-        res = User.query.join(UserSchool, UserSchool.user_id == User.id).filter(User.role_id == role.id)
-        return res
+        role = Role.get('Teacher')
+        return User.query.join(UserSchool, UserSchool.user_id == User.id)\
+            .filter(User.role_id == role.id)\
+            .filter(UserSchool.school_id == self.id)
 
     @property
     def students(self):
-        role = Role.query.filter_by(name='Student').first()
-        res = User.query.join(UserSchool, UserSchool.user_id == User.id).filter(User.role_id == role.id)
-        return res
+        role = Role.get('Student')
+        return User.query.join(UserSchool, UserSchool.user_id == User.id)\
+            .filter(User.role_id == role.id)\
+            .filter(UserSchool.school_id == self.id)
 
     def add_teacher(self, user):
         if not user.is_teacher():
             raise ValidationError('User is not a teacher')
-        u2s = UserSchool(user=user, school=self)
+        u2s = UserSchool()
+        u2s.user = user
+        self.users.append(u2s)
         db.session.add(u2s)
 
     def add_student(self, user):
@@ -310,7 +332,8 @@ class School(db.Model):
         json_school = {
             'name': self.name,
             'description': self.description,
-            'timestamp': self.timestamp,
+            'created': self.created,
+            'updated': self.updated,
         }
         return json_school
 

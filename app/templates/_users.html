@@ -1,0 +1,10 @@
+<ul class="users">
+    {% for user in users %}
+    <li class="user">
+        <div class="user-content">
+            <div class="user-username"><a href="{{ url_for('.user', username=user.username) }}">{{ user.username }}</a></div>
+            <div class="user-name">{{ user.name }}</div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>

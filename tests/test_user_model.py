@@ -121,18 +121,18 @@ class UserModelTestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
         self.assertTrue(
-            (datetime.utcnow() - u.member_since).total_seconds() < 3)
+            (datetime.utcnow() - u.created).total_seconds() < 3)
         self.assertTrue(
-            (datetime.utcnow() - u.last_seen).total_seconds() < 3)
+            (datetime.utcnow() - u.updated).total_seconds() < 3)
 
     def test_ping(self):
         u = User(password='cat')
         db.session.add(u)
         db.session.commit()
         time.sleep(2)
-        last_seen_before = u.last_seen
+        last_seen_before = u.updated
         u.ping()
-        self.assertTrue(u.last_seen > last_seen_before)
+        self.assertTrue(u.updated > last_seen_before)
 
     def test_gravatar(self):
         u = User(email='john@example.com', password='cat')
@@ -156,7 +156,7 @@ class UserModelTestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
         json_user = u.to_json()
-        expected_keys = ['username', 'member_since', 'last_seen']
+        expected_keys = ['username', 'created', 'updated']
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
 
     def test_is_teacher(self):
@@ -187,4 +187,26 @@ class UserModelTestCase(unittest.TestCase):
         u = User(email='john@example.com', password='cat')
         role = Role.query.filter_by(name='Student').first()
         self.assertEquals(role, u.role)
+
+    def test_get_students(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        student = User(email='student@example.com', password='cat')
+        teacher = User(email='teacher@example.com', password='cat')
+        teacher.role = role
+        db.session.add(teacher)
+        db.session.add(student)
+        db.session.commit()
+        self.assertIn(student, User.students().all())
+        self.assertNotIn(teacher, User.students().all())
+
+    def test_get_teachers(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        student = User(email='student@example.com', password='cat')
+        teacher = User(email='teacher@example.com', password='cat')
+        teacher.role = role
+        db.session.add(teacher)
+        db.session.add(student)
+        db.session.commit()
+        self.assertIn(teacher, User.teachers().all())
+        self.assertNotIn(student, User.teachers().all())
 

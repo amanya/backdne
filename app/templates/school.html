@@ -12,6 +12,19 @@
             {{ school.description }}
         </p>
         {% endif %}
+        <p>{{ school.teachers.all()|length }} Teachers</p>
+        <p>{{ school.students.all()|length }} Students</p>
+    </div>
+    <div class="teachers-tabs">
+        {% with users=school.teachers %}
+        {% include '_users.html' %}
+        {% endwith %}
+    </div>
+    <div class="students-tabs">
+        {% with users=school.students %}
+        {% include '_users.html' %}
+        {% endwith %}
+    </div>
     </div>
 </div>
 {% endblock %}
