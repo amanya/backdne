@@ -105,3 +105,14 @@ def add_student_to_school(id):
         'school': school.to_json()
     })
 
+
+@api.route('/schools/<int:id>/teachers/', methods=['PUT'])
+@permission_required(Permission.CREATE_SCHOOLS)
+def add_teacher_to_school(id):
+    school = School.query.get_or_404(id)
+    teacher = User.query.get_or_404(request.json.get('id'))
+    school.add_teacher(teacher)
+    return jsonify({
+        'school': school.to_json()
+    })
+

@@ -147,7 +147,7 @@ class APITestCase(unittest.TestCase):
         school_id = json_response['id']
         student_role = Role.query.filter_by(name='Student').first()
         student = User(email='student@example.com', password='dog', username='student', confirmed=True, role=student_role)
-        db.session.add(u)
+        db.session.add(student)
         db.session.commit()
 
         response = self.client.put(
@@ -164,6 +164,27 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(len(json_response['students']) == 1)
         self.assertTrue(json_response['students'][0]['username'] == 'student')
+
+        # add teacher to school
+        teacher_role = Role.query.filter_by(name='Teacher').first()
+        teacher = User(email='teacher@example.com', password='dog', username='teacher', confirmed=True, role=teacher_role)
+        db.session.add(teacher)
+        db.session.commit()
+
+        response = self.client.put(
+            url_for('api.add_teacher_to_school', id=school_id),
+            headers=self.get_api_headers('john@example.com', 'cat'),
+            data=json.dumps({'id': teacher.id})
+        )
+        self.assertTrue(response.status_code == 200)
+
+        response = self.client.get(
+            url_for('api.get_teachers', id=school_id),
+            headers=self.get_api_headers('john@example.com', 'cat')
+        )
+        json_response = json.loads(response.data.decode('utf-8'))
+        self.assertTrue(len(json_response['teachers']) == 1)
+        self.assertTrue(json_response['teachers'][0]['username'] == 'teacher')
 
     def test_users(self):
         # add two users
