@@ -143,6 +143,28 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['name'] == 'updated_name')
 
+        # add student to school
+        school_id = json_response['id']
+        student_role = Role.query.filter_by(name='Student').first()
+        student = User(email='student@example.com', password='dog', username='student', confirmed=True, role=student_role)
+        db.session.add(u)
+        db.session.commit()
+
+        response = self.client.put(
+            url_for('api.add_student_to_school', id=school_id),
+            headers=self.get_api_headers('john@example.com', 'cat'),
+            data=json.dumps({'id': student.id})
+        )
+        self.assertTrue(response.status_code == 200)
+
+        response = self.client.get(
+            url_for('api.get_students', id=school_id),
+            headers=self.get_api_headers('john@example.com', 'cat')
+        )
+        json_response = json.loads(response.data.decode('utf-8'))
+        self.assertTrue(len(json_response['students']) == 1)
+        self.assertTrue(json_response['students'][0]['username'] == 'student')
+
     def test_users(self):
         # add two users
         r = Role.query.filter_by(name='Student').first()

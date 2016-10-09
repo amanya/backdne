@@ -60,3 +60,12 @@ $ mkvirtualenv backend
                 -H "Content-Type: application/json" \
                 http://127.0.0.1:5000/api/v1.0/schools/
 ```
+* Add student to school
+```
+(backend) $ curl -X PUT \
+                -d '{"id": "42"}' \
+                -H "Authorization: Basic $AUTH_TOKEN" \
+                -H "Accept: application/json" \
+                -H "Content-Type: application/json" \
+                http://127.0.0.1:5000/api/v1.0/schools/1/students/
+```

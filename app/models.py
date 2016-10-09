@@ -330,6 +330,7 @@ class School(db.Model):
 
     def to_json(self):
         json_school = {
+            'id': self.id,
             'name': self.name,
             'description': self.description,
             'created': self.created,

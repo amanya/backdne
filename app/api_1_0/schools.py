@@ -3,7 +3,7 @@ from flask import jsonify, request, url_for, current_app
 from .. import db
 from .decorators import permission_required
 from . import api
-from ..models import School, Permission
+from ..models import School, Permission, User
 
 
 @api.route('/schools/')
@@ -92,5 +92,16 @@ def get_students(id):
         'prev': prev,
         'next': next,
         'count': pagination.total
+    })
+
+
+@api.route('/schools/<int:id>/students/', methods=['PUT'])
+@permission_required(Permission.CREATE_SCHOOLS)
+def add_student_to_school(id):
+    school = School.query.get_or_404(id)
+    student = User.query.get_or_404(request.json.get('id'))
+    school.add_student(student)
+    return jsonify({
+        'school': school.to_json()
     })
 
