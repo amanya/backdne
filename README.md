@@ -21,7 +21,7 @@ $ mkvirtualenv backend
 (backend) $ python manage.py deploy
 ```
 
-* Setup email server. Edit the file `.venv` and fill it with your GMail (or desired SMTP provider) credentials.
+* Setup email server. Rename the file `env.dist` to `.env`, then edit the file `.venv` and fill it with your GMail (or desired SMTP provider) credentials.
 * Start application
 ```
 (backend) $ python manage.py runserver
