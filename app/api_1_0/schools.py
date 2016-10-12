@@ -28,6 +28,7 @@ def get_schools():
 
 
 @api.route('/schools/<int:id>')
+@permission_required(Permission.EXIST)
 def get_school(id):
     school = School.query.get_or_404(id)
     return jsonify(school.to_json())
@@ -52,6 +53,7 @@ def edit_school(id):
 
 
 @api.route('/schools/<int:id>/teachers/')
+@permission_required(Permission.EXIST)
 def get_teachers(id):
     school = School.query.get_or_404(id)
     page = request.args.get('page', 1, type=int)
@@ -74,6 +76,7 @@ def get_teachers(id):
 
 
 @api.route('/schools/<int:id>/students/')
+@permission_required(Permission.EXIST)
 def get_students(id):
     school = School.query.get_or_404(id)
     page = request.args.get('page', 1, type=int)
