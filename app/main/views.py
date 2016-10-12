@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, EditSchoolForm
 from .. import db
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission
@@ -99,3 +99,27 @@ def edit_profile_admin(id):
     form.role.data = user.role_id
     form.name.data = user.name
     return render_template('edit_profile.html', form=form, user=user)
+
+
+@main.route('/edit-school/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_school(id):
+    school = School.query.get_or_404(id)
+    form = EditSchoolForm(school=school)
+    if form.validate_on_submit():
+        school.name = form.name.data
+        school.enabled = form.enabled.data
+        school.address = form.address.data
+        school.email = form.email.data
+        school.description = form.description.data
+
+        db.session.add(school)
+        flash('The school has been updated.')
+        return redirect(url_for('.school', id=school.id))
+    form.name.data = school.name
+    form.enabled.data = school.enabled
+    form.address.data = school.address
+    form.email.data = school.email
+    form.description.data = school.description
+    return render_template('edit_school.html', form=form, user=user)
