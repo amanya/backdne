@@ -211,3 +211,26 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['username'] == 'susan')
 
+    def test_login(self):
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        response = self.client.post(
+            url_for('api.login'),
+            data=json.dumps({'username': 'john', 'password': 'dog'})
+        )
+        self.assertTrue(response.status_code == 401)
+
+        response = self.client.post(
+            url_for('api.login'),
+            data=json.dumps({'username': 'john', 'password': 'cat'})
+        )
+        self.assertTrue(response.status_code == 200)
+
+        response = self.client.post(
+            url_for('api.login'),
+            data=json.dumps({'username': 'pepe', 'password': 'cat'})
+        )
+        self.assertTrue(response.status_code == 401)
+

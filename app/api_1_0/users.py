@@ -1,3 +1,4 @@
+from flask import json
 from flask import jsonify, request, current_app, url_for
 from . import api
 from ..models import User, School
@@ -29,4 +30,14 @@ def get_user_schools(id):
         'next': next,
         'count': pagination.total
     })
+
+
+@api.route('/login', methods=['POST'])
+def login():
+    data = json.loads(request.data)
+    user = User.query.filter_by(username=data["username"]).first()
+    if user is not None and user.verify_password(data["password"]):
+        return jsonify(user.to_json())
+    return 'Unauthorized', 401
+
 

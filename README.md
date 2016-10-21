@@ -38,6 +38,14 @@ $ mkvirtualenv backend
 
 ## Use the api
 
+* Login
+```
+(backend) $ curl -X POST \
+                -d '{"username": "charlie", "password": "12345678"}' \
+                -H "Accept: application/json" \
+                -H "Content-Type: application/json" \
+                http://127.0.0.1:5000/api/v1.0/login/
+```
 * List all schools
 ```
 (backend) $ curl localhost:5000/api/v1.0/schools/
