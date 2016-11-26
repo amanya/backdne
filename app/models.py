@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from sqlalchemy import Index
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -344,3 +345,41 @@ class School(db.Model):
         if name is None or name == '':
             raise ValidationError('school does not have a name')
         return School(name=name)
+
+
+class Score(db.Model):
+    __tablename__ = 'scores'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    game = db.Column(db.String(64), unique=False, index=True)
+    score = db.Column(db.Integer)
+    max_score = db.Column(db.Integer)
+    duration = db.Column(db.Integer)
+    created = db.Column(db.DateTime, default=func.now())
+
+    Index('idx_user_game', user_id, game)
+
+    @staticmethod
+    def from_json(json_score):
+        user_id = json_score.get('user_id')
+        game = json_score.get('game')
+        score = json_score.get('score')
+        max_score = json_score.get('max_score')
+        duration = json_score.get('duration')
+        if game is None or game == '':
+            raise ValidationError('score does not have a game')
+        return Score(user_id=user_id, game=game, score=score, max_score=max_score, duration=duration)
+
+    def to_json(self):
+        json_score = {
+            'id': self.id,
+            'user_id': self.user_id,
+            'game': self.game,
+            'score': self.score,
+            'max_score': self.max_score,
+            'duration': self.duration,
+            'created': self.created,
+        }
+        return json_score
+
+
