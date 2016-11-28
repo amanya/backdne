@@ -352,6 +352,7 @@ class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     game = db.Column(db.String(64), unique=False, index=True)
+    state = db.Column(db.String(64), unique=False)
     score = db.Column(db.Integer)
     max_score = db.Column(db.Integer)
     duration = db.Column(db.Integer)
@@ -363,18 +364,22 @@ class Score(db.Model):
     def from_json(json_score):
         user_id = json_score.get('user_id')
         game = json_score.get('game')
+        state = json_score.get('state')
         score = json_score.get('score')
         max_score = json_score.get('max_score')
         duration = json_score.get('duration')
         if game is None or game == '':
             raise ValidationError('score does not have a game')
-        return Score(user_id=user_id, game=game, score=score, max_score=max_score, duration=duration)
+        if state is None or state == '':
+            raise ValidationError('score does not have a state')
+        return Score(user_id=user_id, game=game, score=score, max_score=max_score, duration=duration, state=state)
 
     def to_json(self):
         json_score = {
             'id': self.id,
             'user_id': self.user_id,
             'game': self.game,
+            'state': self.state,
             'score': self.score,
             'max_score': self.max_score,
             'duration': self.duration,
