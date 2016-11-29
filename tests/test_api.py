@@ -61,7 +61,7 @@ class APITestCase(unittest.TestCase):
         # add a user
         r = Role.query.filter_by(name='Student').first()
         self.assertIsNotNone(r)
-        u = User(email='john@example.com', password='cat', confirmed=True,
+        u = User(username='john', password='cat', confirmed=True,
                  role=r)
         db.session.add(u)
         db.session.commit()
@@ -75,7 +75,7 @@ class APITestCase(unittest.TestCase):
         # get a token
         response = self.client.get(
             url_for('api.get_token'),
-            headers=self.get_api_headers('john@example.com', 'cat'))
+            headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertIsNotNone(json_response.get('token'))
@@ -97,7 +97,7 @@ class APITestCase(unittest.TestCase):
         # add an unconfirmed user
         r = Role.query.filter_by(name='Student').first()
         self.assertIsNotNone(r)
-        u = User(email='john@example.com', password='cat', confirmed=False,
+        u = User(username='john', password='cat', confirmed=False,
                  role=r)
         db.session.add(u)
         db.session.commit()
@@ -105,14 +105,14 @@ class APITestCase(unittest.TestCase):
         # get list of posts with the unconfirmed account
         response = self.client.get(
             url_for('api.get_schools'),
-            headers=self.get_api_headers('john@example.com', 'cat'))
+            headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 403)
 
     def test_schools(self):
         # add a user
         r = Role.query.filter_by(name='Administrator').first()
         self.assertIsNotNone(r)
-        u = User(email='john@example.com', password='cat', confirmed=True,
+        u = User(username='john', password='cat', confirmed=True,
                  role=r)
         db.session.add(u)
         db.session.commit()
@@ -120,7 +120,7 @@ class APITestCase(unittest.TestCase):
         # create a school
         response = self.client.post(
             url_for('api.new_school'),
-            headers=self.get_api_headers('john@example.com', 'cat'),
+            headers=self.get_api_headers('john', 'cat'),
             data=json.dumps({'name': 'school'}))
         self.assertTrue(response.status_code == 201)
         url = response.headers.get('Location')
@@ -129,7 +129,7 @@ class APITestCase(unittest.TestCase):
         # get the new school
         response = self.client.get(
             url,
-            headers=self.get_api_headers('john@example.com', 'cat'))
+            headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['name'] == 'school')
@@ -137,7 +137,7 @@ class APITestCase(unittest.TestCase):
         # edit school
         response = self.client.put(
             url,
-            headers=self.get_api_headers('john@example.com', 'cat'),
+            headers=self.get_api_headers('john', 'cat'),
             data=json.dumps({'name': 'updated_name'}))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
@@ -152,14 +152,14 @@ class APITestCase(unittest.TestCase):
 
         response = self.client.put(
             url_for('api.add_student_to_school', id=school_id),
-            headers=self.get_api_headers('john@example.com', 'cat'),
+            headers=self.get_api_headers('john', 'cat'),
             data=json.dumps({'id': student.id})
         )
         self.assertTrue(response.status_code == 200)
 
         response = self.client.get(
             url_for('api.get_students', id=school_id),
-            headers=self.get_api_headers('john@example.com', 'cat')
+            headers=self.get_api_headers('john', 'cat')
         )
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(len(json_response['students']) == 1)
@@ -173,14 +173,14 @@ class APITestCase(unittest.TestCase):
 
         response = self.client.put(
             url_for('api.add_teacher_to_school', id=school_id),
-            headers=self.get_api_headers('john@example.com', 'cat'),
+            headers=self.get_api_headers('john', 'cat'),
             data=json.dumps({'id': teacher.id})
         )
         self.assertTrue(response.status_code == 200)
 
         response = self.client.get(
             url_for('api.get_teachers', id=school_id),
-            headers=self.get_api_headers('john@example.com', 'cat')
+            headers=self.get_api_headers('john', 'cat')
         )
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(len(json_response['teachers']) == 1)
@@ -200,13 +200,13 @@ class APITestCase(unittest.TestCase):
         # get users
         response = self.client.get(
             url_for('api.get_user', id=u1.id),
-            headers=self.get_api_headers('susan@example.com', 'dog'))
+            headers=self.get_api_headers('susan', 'dog'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['username'] == 'john')
         response = self.client.get(
             url_for('api.get_user', id=u2.id),
-            headers=self.get_api_headers('susan@example.com', 'dog'))
+            headers=self.get_api_headers('susan', 'dog'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['username'] == 'susan')
