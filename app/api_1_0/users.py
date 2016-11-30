@@ -33,14 +33,16 @@ def get_user_schools(id):
     })
 
 
-@api.route('/users/<int:user_id>/games/<string:game>/max_score')
+@api.route('/users/<string:username>/games/<string:game>/max_score')
 @permission_required(Permission.EXIST)
-def get_user_game_max_score(user_id, game):
-    if user_id is not None and game is not None:
-        max_score = Score.max_score_by_user_and_game(user_id, game)
-        if not max_score:
-            return 'Not found', 404
-        return jsonify({'max_score': max_score})
+def get_user_game_max_score(username, game):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    max_score = Score.max_score_by_user_and_game(user.id, game)
+    if not max_score:
+        return 'Not found', 404
+    return jsonify({'max_score': max_score})
 
 
 @api.route('/login', methods=['POST'])

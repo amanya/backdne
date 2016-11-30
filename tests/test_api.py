@@ -270,7 +270,7 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         response = self.client.get(
-            url_for('api.get_user_game_max_score', user_id=u.id, game='some-test'),
+            url_for('api.get_user_game_max_score', username=u.username, game='some-test'),
             headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 404)
 
@@ -296,7 +296,7 @@ class APITestCase(unittest.TestCase):
 
         # get the new score
         response = self.client.get(
-            url_for('api.get_user_game_max_score', user_id=u.id, game='game_test'),
+            url_for('api.get_user_game_max_score', username=u.username, game='game_test'),
             headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))

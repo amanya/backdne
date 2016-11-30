@@ -220,6 +220,7 @@ class User(UserMixin, db.Model):
 
     def to_json(self):
         json_user = {
+            'id': self.id,
             'username': self.username,
             'created': self.created,
             'updated': self.updated,
