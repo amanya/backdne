@@ -1,7 +1,7 @@
 from flask import json
 from flask import jsonify, request, current_app, url_for
 from . import api
-from ..models import User, School
+from ..models import User, School, Score
 
 
 @api.route('/users/<int:id>')
@@ -30,6 +30,15 @@ def get_user_schools(id):
         'next': next,
         'count': pagination.total
     })
+
+
+@api.route('/users/<int:user_id>/games/<string:game>/max_score')
+def get_user_game_max_score(user_id, game):
+    if user_id is not None and game is not None:
+        max_score = Score.max_score_by_user_and_game(user_id, game)
+        if not max_score:
+            return 'Not found', 404
+        return jsonify({'max_score': max_score})
 
 
 @api.route('/login', methods=['POST'])

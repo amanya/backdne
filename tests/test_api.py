@@ -234,3 +234,73 @@ class APITestCase(unittest.TestCase):
         )
         self.assertTrue(response.status_code == 401)
 
+    def test_create_score(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
+
+        # create a score
+        response = self.client.post(
+            url_for('api.create_score'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps({"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
+        self.assertTrue(response.status_code == 201)
+        url = response.headers.get('Location')
+        self.assertIsNotNone(url)
+
+        # get the new score
+        response = self.client.get(
+            url,
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+        self.assertTrue(json_response['game'] == 'game_test')
+
+    def test_get_user_game_max_score_not_found(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.get_user_game_max_score', user_id=u.id, game='some-test'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 404)
+
+    def test_get_user_game_max_score(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
+
+        # create some scores
+        response = self.client.post(
+            url_for('api.create_score'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps({"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
+
+        response = self.client.post(
+            url_for('api.create_score'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps({"game": "game_test", "score": "21", "max_score": "32", "duration": "64", "state": "running"}))
+
+        # get the new score
+        response = self.client.get(
+            url_for('api.get_user_game_max_score', user_id=u.id, game='game_test'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+        self.assertTrue(json_response['max_score'] == 21)
+
+
+

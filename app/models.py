@@ -387,4 +387,12 @@ class Score(db.Model):
         }
         return json_score
 
+    @staticmethod
+    def max_score_by_user_and_game(user_id, game_id):
+        max_score = db.session.query(func.max(Score.score)).select_from(Score)\
+            .filter(Score.user_id == user_id)\
+            .filter(Score.game == game_id)\
+            .first()[0]
+
+        return max_score
 
