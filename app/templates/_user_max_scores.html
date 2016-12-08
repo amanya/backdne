@@ -1,0 +1,18 @@
+<div class="score-content">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Game</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for score in scores %}
+            <tr>
+                <td>{{ score.game }}</td>
+                <td>{{ score.score }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

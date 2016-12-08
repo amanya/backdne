@@ -262,12 +262,10 @@ class User(UserMixin, db.Model):
 
     @property
     def max_score_by_game(self):
-        return db.session.query(Score.game, Score.state, func.max(Score.score).label('score'), Score.max_score,
-                                Score.duration) \
+        return db.session.query(Score.game, func.max(Score.score).label('score')) \
             .select_from(Score) \
             .join(User, self.id == Score.user_id) \
-            .group_by(Score.game) \
-            .order_by(func.max(Score.score).desc())
+            .group_by(Score.game)
 
     def __repr__(self):
         return '<User %r>' % self.username
