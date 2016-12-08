@@ -2,7 +2,6 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Username</th>
                 <th>Game</th>
                 <th>State</th>
                 <th>Score</th>
@@ -12,7 +11,6 @@
         <tbody>
             {% for score in scores %}
             <tr>
-                <th scope="row"><a href="{{ url_for('.user', username=score.user.username) }}">{{ score.user.username }}</a></th>
                 <td>{{ score.game }}</td>
                 <td>{{ score.state }}</td>
                 <td>{{ score.score }}/{{ score.max_score }}</td>

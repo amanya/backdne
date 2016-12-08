@@ -254,6 +254,17 @@ class User(UserMixin, db.Model):
         role = Role.get('Student')
         return User.query.filter(User.role_id == role.id)
 
+    @property
+    def scores(self):
+        return Score.query.join(User, self.id == Score.user_id)
+
+    @property
+    def max_score_by_game(self):
+        return db.session.query(Score.game, Score.state, func.max(Score.score).label('score'), Score.max_score, Score.duration) \
+            .select_from(Score) \
+            .group_by(Score.game) \
+            .join(User, self.id == Score.user_id)
+
     def __repr__(self):
         return '<User %r>' % self.username
 

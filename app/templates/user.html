@@ -10,7 +10,7 @@
         <h1>{{ user.username }}</h1>
         {% if user.name %}
         <p>
-            {% if user.name %}{{ user.name }}<br>{% endif %}
+            {{ user.name }}<br>
         </p>
         {% endif %}
         {% if current_user.is_administrator() and user.email %}
@@ -34,6 +34,26 @@
             <a class="btn btn-danger" href="{{ url_for('.edit_profile_admin', id=user.id) }}">Edit Profile [Admin]</a>
             {% endif %}
         </p>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Scores</h3>
+        </div>
+        <div class="panel-body">
+            {% with scores=user.scores %}
+            {% include '_user_scores.html' %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Max scores per game</h3>
+        </div>
+        <div class="panel-body">
+            {% with scores=user.max_score_by_game %}
+            {% include '_user_scores.html' %}
+            {% endwith %}
+        </div>
     </div>
 </div>
 {% endblock %}

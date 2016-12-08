@@ -1,10 +1,22 @@
-<ul class="users">
-    {% for user in users %}
-    <li class="user">
-        <div class="user-content">
-            <div class="user-username"><a href="{{ url_for('.user', username=user.username) }}">{{ user.username }}</a></div>
-            <div class="user-name">{{ user.name }}</div>
-        </div>
-    </li>
-    {% endfor %}
-</ul>
+<div class="users">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td><a href="{{ url_for('.user', username=user.username) }}">{{ user.username }}</a></td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

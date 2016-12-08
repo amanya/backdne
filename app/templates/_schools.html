@@ -1,13 +1,18 @@
-<ul class="posts">
-    {% for school in schools %}
-    <li class="post">
-        <div class="school-content">
-            <div class="t-date">{{ moment(school.created).fromNow() }}</div>
-            <div class="school-name"><a href="{{ url_for('.school', id=school.id) }}">{{ school.name }}</a></div>
-            <div class="school-description">{{ school.description }}</div>
-            <div class="school-teachers">{{ school.teachers.all() | length }} Teachers</div>
-            <div class="school-students">{{ school.students.all() | length }} Students</div>
-        </div>
-    </li>
-    {% endfor %}
-</ul>
+<div class="schools-content">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for school in schools %}
+            <tr>
+                <th scope="row"><a href="{{ url_for('.school', id=school.id) }}">{{ school.name }}</a></th>
+                <td>{{ school.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
