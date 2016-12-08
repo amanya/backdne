@@ -78,7 +78,6 @@ class User(UserMixin, db.Model):
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     schools = db.relationship('UserSchool', back_populates="user")
 
-
     @staticmethod
     def generate_fake(count=100):
         from sqlalchemy.exc import IntegrityError
@@ -254,16 +253,20 @@ class User(UserMixin, db.Model):
         role = Role.get('Student')
         return User.query.filter(User.role_id == role.id)
 
+    def have_scores(self):
+        return Score.query.join(User, self.id == Score.user_id).count() > 0
+
     @property
     def scores(self):
         return Score.query.join(User, self.id == Score.user_id)
 
     @property
     def max_score_by_game(self):
-        return db.session.query(Score.game, Score.state, func.max(Score.score).label('score'), Score.max_score, Score.duration) \
+        return db.session.query(Score.game, Score.state, func.max(Score.score).label('score'), Score.max_score,
+                                Score.duration) \
             .select_from(Score) \
-            .group_by(Score.game) \
-            .join(User, self.id == Score.user_id)
+            .join(User, self.id == Score.user_id) \
+            .group_by(Score.game)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -319,15 +322,15 @@ class School(db.Model):
     @property
     def teachers(self):
         role = Role.get('Teacher')
-        return User.query.join(UserSchool, UserSchool.user_id == User.id)\
-            .filter(User.role_id == role.id)\
+        return User.query.join(UserSchool, UserSchool.user_id == User.id) \
+            .filter(User.role_id == role.id) \
             .filter(UserSchool.school_id == self.id)
 
     @property
     def students(self):
         role = Role.get('Student')
-        return User.query.join(UserSchool, UserSchool.user_id == User.id)\
-            .filter(User.role_id == role.id)\
+        return User.query.join(UserSchool, UserSchool.user_id == User.id) \
+            .filter(User.role_id == role.id) \
             .filter(UserSchool.school_id == self.id)
 
     def add_teacher(self, user):
@@ -408,10 +411,9 @@ class Score(db.Model):
 
     @staticmethod
     def max_score_by_user_and_game(user_id, game_id):
-        max_score = db.session.query(func.max(Score.score)).select_from(Score)\
-            .filter(Score.user_id == user_id)\
-            .filter(Score.game == game_id)\
+        max_score = db.session.query(func.max(Score.score)).select_from(Score) \
+            .filter(Score.user_id == user_id) \
+            .filter(Score.game == game_id) \
             .first()[0]
 
         return max_score
-
