@@ -199,8 +199,11 @@ class User(UserMixin, db.Model):
             url = 'https://secure.gravatar.com/avatar'
         else:
             url = 'http://www.gravatar.com/avatar'
-        hash = self.avatar_hash or hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
+        if self.email:
+            hash = self.avatar_hash or hashlib.md5(
+                self.email.encode('utf-8')).hexdigest()
+        else:
+            hash = hashlib.md5(self.username.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 
@@ -360,6 +363,10 @@ class Score(db.Model):
     created = db.Column(db.DateTime, default=func.now())
 
     Index('idx_user_game', user_id, game)
+
+    @property
+    def user(self):
+        return User.query.get(self.user_id)
 
     @staticmethod
     def from_json(json_score):

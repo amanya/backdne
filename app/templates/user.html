@@ -13,8 +13,17 @@
             {% if user.name %}{{ user.name }}<br>{% endif %}
         </p>
         {% endif %}
-        {% if current_user.is_administrator() %}
+        {% if current_user.is_administrator() and user.email %}
         <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+        {% endif %}
+        {% if user.is_administrator() %}
+        <p><span class="label label-danger">Administrator</span></p>
+        {% endif %}
+        {% if user.is_teacher() %}
+        <p><span class="label label-primary">Teacher</span></p>
+        {% endif %}
+        {% if user.is_student() %}
+        <p><span class="label label-default">Student</span></p>
         {% endif %}
         <p>Member since {{ moment(user.created).format('L') }}. Last seen {{ moment(user.updated).fromNow() }}.</p>
         <p>

@@ -1,0 +1,13 @@
+<ul class="scores">
+    {% for score in scores %}
+    <li class="score">
+        <div class="score-content">
+            <div class="score-username"><a href="{{ url_for('.user', username=score.user.username) }}">{{ score.user.username }}</a></div>
+            <div class="score-game">{{ score.game }}</div>
+            <div class="score-state">{{ score.state }}</div>
+            <div class="score-score">{{ score.score }}/{{ score.max_score }}</div>
+            <div class="score-duration">{{ score.duration }}</div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>

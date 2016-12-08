@@ -4,10 +4,10 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, EditSchoolForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm
 from .. import db
 from ..decorators import admin_required
-from ..models import Role, User, School, Permission
+from ..models import Role, User, School, Permission, Score
 
 
 @main.after_app_request
@@ -64,6 +64,35 @@ def schools():
     schools = pagination.items
     return render_template('schools.html', form=form, schools=schools, pagination=pagination)
 
+@main.route('/scores', methods=['GET'])
+@login_required
+def scores():
+    page = request.args.get('page', 1, type=int)
+    query = Score.query
+    pagination = query.order_by(Score.created.desc()).paginate(
+        page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
+        error_out=False)
+    scores = pagination.items
+    return render_template('scores.html', scores=scores, pagination=pagination)
+
+@main.route('/users', methods=['GET', 'POST'])
+@login_required
+def users():
+    form = UserForm()
+    if current_user.can(Permission.CREATE_USERS) and form.validate_on_submit():
+        user = User()
+        user.username = form.username.data
+        user.password = form.password.data
+        user.role_id = form.role.data
+        db.session.add(user)
+        return redirect(url_for('.index'))
+    page = request.args.get('page', 1, type=int)
+    query = User.query
+    pagination = query.order_by(User.created.desc()).paginate(
+        page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
+        error_out=False)
+    users = pagination.items
+    return render_template('users.html', form=form, users=users, pagination=pagination)
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required

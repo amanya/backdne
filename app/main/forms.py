@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SelectField, \
-    SubmitField
+    SubmitField, PasswordField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
 from flask_pagedown.fields import PageDownField
@@ -45,6 +45,20 @@ class EditProfileAdminForm(FlaskForm):
                 User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use.')
 
+
+class UserForm(FlaskForm):
+    username = StringField('Username', validators=[
+        DataRequired(), Length(1, 64), Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0,
+                                              'Usernames must have only letters, '
+                                              'numbers, dots or underscores')])
+    password = PasswordField("Password", validators=[DataRequired()])
+    role = SelectField('Role', coerce=int)
+
+    submit = SubmitField('Submit')
+    def __init__(self, *args, **kwargs):
+        super(UserForm, self).__init__(*args, **kwargs)
+        self.role.choices = [(role.id, role.name)
+                             for role in Role.query.order_by(Role.name).all()]
 
 class SchoolForm(FlaskForm):
     name = StringField('Name of the school', validators=[Length(0, 64)])
