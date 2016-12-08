@@ -266,7 +266,8 @@ class User(UserMixin, db.Model):
                                 Score.duration) \
             .select_from(Score) \
             .join(User, self.id == Score.user_id) \
-            .group_by(Score.game)
+            .group_by(Score.game) \
+            .order_by(func.max(Score.score).desc())
 
     def __repr__(self):
         return '<User %r>' % self.username
