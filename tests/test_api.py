@@ -4,7 +4,7 @@ import re
 from base64 import b64encode
 from flask import url_for
 from app import create_app, db
-from app.models import User, Role, School
+from app.models import User, Role, School, Lesson
 
 
 class APITestCase(unittest.TestCase):
@@ -302,5 +302,69 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['max_score'] == 21)
 
+    def test_create_lesson(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
 
+        lesson = {"lesson": "the_lesson", "total_pages_viewed": 1, "clicks_forward": 2, "clicks_backward": 3, "clicks_menu": 4, "clicks_lesson_repeat": 5, "way_exit": "asdf", "is_finished": True, "duration": 6}
+
+        # create a lesson
+        response = self.client.post(
+            url_for('api.create_lesson'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps(lesson))
+        self.assertTrue(response.status_code == 201)
+        url = response.headers.get('Location')
+        self.assertIsNotNone(url)
+
+        # get the new lesson
+        response = self.client.get(
+            url,
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+        for k, v in lesson.items():
+            self.assertEquals(json_response[k], v)
+
+    def test_get_finished_lessons(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
+
+        ls = [
+            Lesson(lesson="lesson1", user_id=u.id, is_finished=False),
+            Lesson(lesson="lesson1", user_id=u.id, is_finished=False),
+            Lesson(lesson="lesson2", user_id=u.id, is_finished=False),
+            Lesson(lesson="lesson2", user_id=u.id, is_finished=True),
+            Lesson(lesson="lesson3", user_id=u.id, is_finished=True),
+            Lesson(lesson="lesson3", user_id=u.id, is_finished=True)
+        ]
+
+        for l in ls:
+            db.session.add(l)
+
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.get_finished_lessons'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = {
+            "lesson1": False,
+            "lesson2": True,
+            "lesson3": True,
+        }
+
+        self.assertEqual(json_response, expected)
 
