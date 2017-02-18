@@ -172,7 +172,7 @@ class UserModelTestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
         json_user = u.to_json()
-        expected_keys = ['username', 'id', 'created', 'updated', 'tutorial_completed']
+        expected_keys = ['username', 'id', 'created', 'updated', 'tutorial_completed', 'exam_points']
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
 
     def test_is_teacher(self):
@@ -225,3 +225,10 @@ class UserModelTestCase(unittest.TestCase):
         db.session.commit()
         self.assertIn(teacher, User.teachers().all())
         self.assertNotIn(student, User.teachers().all())
+
+    def test_update(self):
+        u = User(email='student@example.com', password='cat')
+        u.update({'username': 'pepe'})
+        self.assertEquals(u.username, 'pepe')
+        with self.assertRaises(ValueError):
+            u.update({'non_existend_field': 'asdf'})

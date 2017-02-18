@@ -11,6 +11,14 @@ def get_user(id):
     return jsonify(user.to_json())
 
 
+@api.route('/users/<int:id>', methods=['POST',])
+@permission_required(Permission.EXIST)
+def post_user(id):
+    user = User.query.get_or_404(id)
+    user.update(request.json)
+    return jsonify(user.to_json())
+
+
 @api.route('/users/<int:id>/schools/')
 def get_user_schools(id):
     user = User.query.get_or_404(id)
@@ -52,44 +60,4 @@ def login():
     if user is not None and user.verify_password(data["password"]):
         return jsonify(user.to_json())
     return 'Unauthorized', 401
-
-
-@api.route('/users/<string:username>/tutorial_completed')
-@permission_required(Permission.EXIST)
-def get_tutorial_completed(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return 'Not found', 404
-    return jsonify({'tutorial_completed': user.tutorial_completed})
-
-
-@api.route('/users/<string:username>/tutorial_completed', methods=['POST',])
-@permission_required(Permission.EXIST)
-def post_tutorial_completed(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return 'Not found', 404
-    user.tutorial_completed = True
-    return jsonify({'tutorial_completed': user.tutorial_completed})
-
-
-@api.route('/users/<string:username>/exam_points')
-@permission_required(Permission.EXIST)
-def get_exam_points(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return 'Not found', 404
-    return jsonify({'exam_points': user.exam_points})
-
-
-@api.route('/users/<string:username>/exam_points', methods=['POST',])
-@permission_required(Permission.EXIST)
-def post_exam_points(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return 'Not found', 404
-    if not "exam_points" in request.json:
-        return 'Invalid value', 400
-    user.exam_points = request.json["exam_points"]
-    return jsonify({'exam_points': user.exam_points})
 

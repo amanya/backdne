@@ -6,6 +6,7 @@ from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy import Index
 from sqlalchemy import func
+from sqlalchemy import inspect
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.exceptions import ValidationError
@@ -227,10 +228,18 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'username': self.username,
             'tutorial_completed': self.tutorial_completed,
+            'exam_points': self.exam_points,
             'created': self.created,
             'updated': self.updated,
         }
         return json_user
+
+    def update(self, data):
+        mapper = inspect(User)
+        for k, v in data.items():
+            if not k in mapper.attrs:
+                raise ValidationError("Field '{}' is not part of User".format(k))
+            setattr(self, k, v)
 
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
@@ -375,6 +384,7 @@ class Score(db.Model):
     state = db.Column(db.String(64), unique=False)
     score = db.Column(db.Integer)
     max_score = db.Column(db.Integer)
+    is_exam = db.Column(db.Boolean, default=False)
     duration = db.Column(db.Integer)
     created = db.Column(db.DateTime, default=func.now())
 
@@ -392,11 +402,12 @@ class Score(db.Model):
         score = json_score.get('score')
         max_score = json_score.get('max_score')
         duration = json_score.get('duration')
+        is_exam = json_score.get('is_exam')
         if game is None or game == '':
             raise ValidationError('score does not have a game')
         if state is None or state == '':
             raise ValidationError('score does not have a state')
-        return Score(user_id=user_id, game=game, score=score, max_score=max_score, duration=duration, state=state)
+        return Score(user_id=user_id, game=game, score=score, max_score=max_score, duration=duration, state=state, is_exam=is_exam)
 
     def to_json(self):
         json_score = {
