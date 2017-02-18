@@ -76,6 +76,7 @@ class User(UserMixin, db.Model):
     tutorial_completed = db.Column(db.Boolean, default=False)
     exam_points = db.Column(db.Integer, default=0)
     name = db.Column(db.String(64))
+    gender = db.Column(db.String(32), default='undefined')
     avatar_hash = db.Column(db.String(32))
     created = db.Column(db.DateTime, default=func.now())
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
@@ -105,6 +106,8 @@ class User(UserMixin, db.Model):
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
+        if self.gender is None:
+            self.gender = 'undefined'
         if self.role is None:
             if self.email == current_app.config['BACKEND_ADMIN']:
                 self.role = Role.query.filter_by(permissions=0xff).first()
@@ -229,6 +232,7 @@ class User(UserMixin, db.Model):
             'username': self.username,
             'tutorial_completed': self.tutorial_completed,
             'exam_points': self.exam_points,
+            'gender': self.gender,
             'created': self.created,
             'updated': self.updated,
         }
