@@ -71,3 +71,25 @@ def post_tutorial_completed(username):
         return 'Not found', 404
     user.tutorial_completed = True
     return jsonify({'tutorial_completed': user.tutorial_completed})
+
+
+@api.route('/users/<string:username>/exam_points')
+@permission_required(Permission.EXIST)
+def get_exam_points(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    return jsonify({'exam_points': user.exam_points})
+
+
+@api.route('/users/<string:username>/exam_points', methods=['POST',])
+@permission_required(Permission.EXIST)
+def post_exam_points(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    if not "exam_points" in request.json:
+        return 'Invalid value', 400
+    user.exam_points = request.json["exam_points"]
+    return jsonify({'exam_points': user.exam_points})
+

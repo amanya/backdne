@@ -142,6 +142,14 @@ class UserModelTestCase(unittest.TestCase):
         u = User.query.filter_by(username='felix').first()
         self.assertTrue(u.tutorial_completed)
 
+    def test_exam_points(self):
+        u = User(username='felix', password='cat')
+        u.exam_points = 10
+        db.session.add(u)
+        db.session.commit()
+        u = User.query.filter_by(username='felix').first()
+        self.assertEquals(u.exam_points, 10)
+
     def test_gravatar(self):
         u = User(email='john@example.com', password='cat')
         with self.app.test_request_context('/'):

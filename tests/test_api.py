@@ -400,3 +400,49 @@ class APITestCase(unittest.TestCase):
 
         expected = {'tutorial_completed': True}
         self.assertEqual(json_response, expected)
+
+
+def test_exam_points(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.get_exam_points', username='john'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = {'exam_points': 0}
+        self.assertEqual(json_response, expected)
+
+        response = self.client.post(
+            url_for('api.post_exam_points', username='john'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps({'exam_points': 10}))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = {'exam_points': 10}
+        self.assertEqual(json_response, expected)
+
+        response = self.client.get(
+            url_for('api.get_exam_points', username='john'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = {'exam_points': 10}
+        self.assertEqual(json_response, expected)
+
+        response = self.client.post(
+            url_for('api.post_exam_points', username='john'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps({'exam_points': "10"}))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = {'exam_points': 10}
+        self.assertEqual(json_response, expected)
+
