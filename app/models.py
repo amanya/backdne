@@ -72,6 +72,7 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
+    tutorial_completed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
     avatar_hash = db.Column(db.String(32))
     created = db.Column(db.DateTime, default=func.now())

@@ -54,3 +54,20 @@ def login():
     return 'Unauthorized', 401
 
 
+@api.route('/users/<string:username>/tutorial_completed')
+@permission_required(Permission.EXIST)
+def get_tutorial_completed(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    return jsonify({'tutorial_completed': user.tutorial_completed})
+
+
+@api.route('/users/<string:username>/tutorial_completed', methods=['POST',])
+@permission_required(Permission.EXIST)
+def post_tutorial_completed(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    user.tutorial_completed = True
+    return jsonify({'tutorial_completed': user.tutorial_completed})
