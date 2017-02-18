@@ -172,7 +172,7 @@ class UserModelTestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
         json_user = u.to_json()
-        expected_keys = ['username', 'id', 'created', 'updated']
+        expected_keys = ['username', 'id', 'created', 'updated', 'tutorial_completed']
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
 
     def test_is_teacher(self):

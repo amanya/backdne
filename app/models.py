@@ -226,6 +226,7 @@ class User(UserMixin, db.Model):
         json_user = {
             'id': self.id,
             'username': self.username,
+            'tutorial_completed': self.tutorial_completed,
             'created': self.created,
             'updated': self.updated,
         }
