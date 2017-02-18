@@ -421,6 +421,7 @@ class Score(db.Model):
             'state': self.state,
             'score': self.score,
             'max_score': self.max_score,
+            'is_exam': self.is_exam,
             'duration': self.duration,
             'created': self.created,
         }
