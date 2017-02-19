@@ -1,7 +1,8 @@
 from flask import json
 from flask import jsonify, request, current_app, url_for
-from .decorators import permission_required
+
 from . import api
+from .decorators import permission_required
 from ..models import User, Permission, School, Score
 
 
@@ -11,7 +12,7 @@ def get_user(id):
     return jsonify(user.to_json())
 
 
-@api.route('/users/<int:id>', methods=['POST',])
+@api.route('/users/<int:id>', methods=['POST', ])
 @permission_required(Permission.EXIST)
 def post_user(id):
     user = User.query.get_or_404(id)
@@ -29,10 +30,10 @@ def get_user_schools(id):
     schools = pagination.items
     prev = None
     if pagination.has_prev:
-        prev = url_for('api.get_user_schools', page=page-1, _external=True)
+        prev = url_for('api.get_user_schools', page=page - 1, _external=True)
     next = None
     if pagination.has_next:
-        next = url_for('api.get_user_schools', page=page+1, _external=True)
+        next = url_for('api.get_user_schools', page=page + 1, _external=True)
     return jsonify({
         'schools': [school.to_json() for school in schools],
         'prev': prev,
@@ -52,6 +53,20 @@ def get_user_game_max_score(username, game):
         return 'Not found', 404
     return jsonify({'max_score': max_score})
 
+@api.route('/users/<string:username>/games/<string:game>/scores')
+@permission_required(Permission.EXIST)
+def get_user_game_scores(username, game):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    pagination = user.scores.paginate(
+        page, per_page=per_page,
+        error_out=False)
+    scores = pagination.items
+    return jsonify({'scores': [score.to_json() for score in scores],})
+
 
 @api.route('/login', methods=['POST'])
 def login():
@@ -60,4 +75,3 @@ def login():
     if user is not None and user.verify_password(data["password"]):
         return jsonify(user.to_json())
     return 'Unauthorized', 401
-

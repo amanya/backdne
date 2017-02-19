@@ -2,9 +2,11 @@ import unittest
 import json
 import re
 from base64 import b64encode
+
+import datetime
 from flask import url_for
 from app import create_app, db
-from app.models import User, Role, School, Lesson
+from app.models import User, Role, School, Lesson, Score
 
 
 class APITestCase(unittest.TestCase):
@@ -146,7 +148,8 @@ class APITestCase(unittest.TestCase):
         # add student to school
         school_id = json_response['id']
         student_role = Role.query.filter_by(name='Student').first()
-        student = User(email='student@example.com', password='dog', username='student', confirmed=True, role=student_role)
+        student = User(email='student@example.com', password='dog', username='student', confirmed=True,
+                       role=student_role)
         db.session.add(student)
         db.session.commit()
 
@@ -167,7 +170,8 @@ class APITestCase(unittest.TestCase):
 
         # add teacher to school
         teacher_role = Role.query.filter_by(name='Teacher').first()
-        teacher = User(email='teacher@example.com', password='dog', username='teacher', confirmed=True, role=teacher_role)
+        teacher = User(email='teacher@example.com', password='dog', username='teacher', confirmed=True,
+                       role=teacher_role)
         db.session.add(teacher)
         db.session.commit()
 
@@ -247,7 +251,8 @@ class APITestCase(unittest.TestCase):
         response = self.client.post(
             url_for('api.create_score'),
             headers=self.get_api_headers('john', 'cat'),
-            data=json.dumps({"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
+            data=json.dumps(
+                {"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
         self.assertTrue(response.status_code == 201)
         url = response.headers.get('Location')
         self.assertIsNotNone(url)
@@ -287,12 +292,14 @@ class APITestCase(unittest.TestCase):
         response = self.client.post(
             url_for('api.create_score'),
             headers=self.get_api_headers('john', 'cat'),
-            data=json.dumps({"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
+            data=json.dumps(
+                {"game": "game_test", "score": "17", "max_score": "32", "duration": "64", "state": "running"}))
 
         response = self.client.post(
             url_for('api.create_score'),
             headers=self.get_api_headers('john', 'cat'),
-            data=json.dumps({"game": "game_test", "score": "21", "max_score": "32", "duration": "64", "state": "running"}))
+            data=json.dumps(
+                {"game": "game_test", "score": "21", "max_score": "32", "duration": "64", "state": "running"}))
 
         # get the new score
         response = self.client.get(
@@ -301,6 +308,46 @@ class APITestCase(unittest.TestCase):
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['max_score'] == 21)
+
+    def test_get_user_game_scores(self):
+        # add a user
+        r = Role.query.filter_by(name='Administrator').first()
+        self.assertIsNotNone(r)
+        u = User(username='john', password='cat', confirmed=True,
+                 role=r)
+        db.session.add(u)
+        db.session.commit()
+
+        scores = [
+            (datetime.datetime(2017, 1, 3, 0, 0, 0),
+             {"user_id": u.id, "game": "game_test", "score": 17, "max_score": 32, "duration": 64, "state": "running",
+              "is_exam": True},),
+            (datetime.datetime(2017, 1, 2, 0, 0, 0),
+             {"user_id": u.id, "game": "game_test", "score": 7, "max_score": 32, "duration": 64, "state": "running",
+              "is_exam": True},),
+            (datetime.datetime(2017, 1, 1, 0, 0, 0),
+             {"user_id": u.id, "game": "game_test", "score": 27, "max_score": 32, "duration": 64, "state": "running",
+              "is_exam": True},),
+        ]
+
+        for d, s in scores:
+            s = Score(**s)
+            s.created = d
+            db.session.add(s)
+        db.session.commit()
+
+        # get the new score
+        response = self.client.get(
+            url_for('api.get_user_game_scores', username=u.username, game='game_test'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        expected = [s[1] for s in sorted(scores, key=lambda k: k[0])]
+        scores = json_response["scores"]
+
+        for a, b in zip(expected, scores):
+            self.assertEquals(a["score"], b["score"])
 
     def test_create_lesson(self):
         # add a user
@@ -311,7 +358,8 @@ class APITestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
 
-        lesson = {"lesson": "the_lesson", "total_pages_viewed": 1, "clicks_forward": 2, "clicks_backward": 3, "clicks_menu": 4, "clicks_lesson_repeat": 5, "way_exit": "asdf", "is_finished": True, "duration": 6}
+        lesson = {"lesson": "the_lesson", "total_pages_viewed": 1, "clicks_forward": 2, "clicks_backward": 3,
+                  "clicks_menu": 4, "clicks_lesson_repeat": 5, "way_exit": "asdf", "is_finished": True, "duration": 6}
 
         # create a lesson
         response = self.client.post(
@@ -387,4 +435,3 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
 
         self.assertEqual(json_response["username"], "pepe")
-

@@ -81,6 +81,7 @@ class User(UserMixin, db.Model):
     created = db.Column(db.DateTime, default=func.now())
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     schools = db.relationship('UserSchool', back_populates="user")
+    scores = db.relationship('Score', backref='user', lazy='dynamic', order_by="Score.created")
 
     @staticmethod
     def generate_fake(count=100):
@@ -273,10 +274,6 @@ class User(UserMixin, db.Model):
         return Score.query.join(User, self.id == Score.user_id).count() > 0
 
     @property
-    def scores(self):
-        return Score.query.join(User, self.id == Score.user_id)
-
-    @property
     def max_score_by_game(self):
         return db.session.query(Score.game, func.max(Score.score).label('score')) \
             .select_from(Score) \
@@ -426,6 +423,12 @@ class Score(db.Model):
             'created': self.created,
         }
         return json_score
+
+    @staticmethod
+    def scores_by_user_and_game(user_id, game_id):
+        return Score.query.join(User, User.id == Score.user_id) \
+            .filter(User.id == user_id) \
+            .filter(Score.game == game_id)
 
     @staticmethod
     def max_score_by_user_and_game(user_id, game_id):
