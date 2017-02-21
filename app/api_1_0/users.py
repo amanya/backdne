@@ -46,7 +46,7 @@ def get_user_schools(id):
     })
 
 
-@api.route('/users/<string:username>/games/<string:game>/max_score')
+@api.route('/users/<string:username>/games/<string:game>/best_score')
 @permission_required(Permission.EXIST)
 def get_user_game_max_score(username, game):
     user = User.query.filter_by(username=username).first()
