@@ -6,16 +6,20 @@ from .decorators import permission_required
 from ..models import User, Permission, School, Score
 
 
-@api.route('/users/<int:id>')
-def get_user(id):
-    user = User.query.get_or_404(id)
+@api.route('/users/<string:username>')
+def get_user(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
     return jsonify(user.to_json())
 
 
-@api.route('/users/<int:id>', methods=['POST', ])
+@api.route('/users/<string:username>', methods=['POST', ])
 @permission_required(Permission.EXIST)
-def post_user(id):
-    user = User.query.get_or_404(id)
+def post_user(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return 'Not found', 404
     user.update(request.json)
     return jsonify(user.to_json())
 

@@ -203,13 +203,13 @@ class APITestCase(unittest.TestCase):
 
         # get users
         response = self.client.get(
-            url_for('api.get_user', id=u1.id),
+            url_for('api.get_user', username=u1.username),
             headers=self.get_api_headers('susan', 'dog'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
         self.assertTrue(json_response['username'] == 'john')
         response = self.client.get(
-            url_for('api.get_user', id=u2.id),
+            url_for('api.get_user', username=u2.username),
             headers=self.get_api_headers('susan', 'dog'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
@@ -423,13 +423,13 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         response = self.client.post(
-            url_for('api.post_user', id=u.id),
+            url_for('api.post_user', username=u.username),
             headers=self.get_api_headers('john', 'cat'),
             data=json.dumps({"username": "pepe"})
         )
 
         response = self.client.get(
-            url_for('api.get_user', id=u.id),
+            url_for('api.get_user', username=u.username),
             headers=self.get_api_headers('pepe', 'cat'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
