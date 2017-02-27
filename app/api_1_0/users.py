@@ -57,6 +57,7 @@ def get_user_game_max_score(username, game):
         return 'Not found', 404
     return jsonify({'max_score': max_score})
 
+
 @api.route('/users/<string:username>/games/<string:game>/scores')
 @permission_required(Permission.EXIST)
 def get_user_game_scores(username, game):
