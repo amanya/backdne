@@ -27,14 +27,16 @@ def get_score(id):
 @permission_required(Permission.EXIST)
 def best_scores():
     is_exam = request.args.get('is_exam', False, type=bool)
+    game = request.args.get('game', '', type=str)
+
+    best_scores = db.session.query(Score.id, Score.game, func.max(Score.score)).select_from(Score) \
+        .group_by(Score.game)
 
     if is_exam:
-        best_scores = db.session.query(Score.id, Score.game, func.max(Score.score)).select_from(Score) \
-            .filter_by(is_exam=True) \
-            .group_by(Score.game)
-    else:
-        best_scores = db.session.query(Score.id, Score.game, func.max(Score.score)).select_from(Score) \
-            .group_by(Score.game)
+        best_scores = best_scores.filter_by(is_exam=True)
+
+    if game:
+        best_scores = best_scores.filter_by(game=game)
 
     scores = []
     for id, _, _ in best_scores:
@@ -47,14 +49,16 @@ def best_scores():
 @permission_required(Permission.EXIST)
 def last_scores():
     is_exam = request.args.get('is_exam', False, type=bool)
+    game = request.args.get('game', '', type=str)
+
+    last_scores = db.session.query(Score.id, Score.game, func.max(Score.created)).select_from(Score) \
+        .group_by(Score.game)
 
     if is_exam:
-        last_scores = db.session.query(Score.id, Score.game, func.max(Score.created)).select_from(Score) \
-            .filter_by(is_exam=True) \
-            .group_by(Score.game)
-    else:
-        last_scores = db.session.query(Score.id, Score.game, func.max(Score.created)).select_from(Score) \
-            .group_by(Score.game)
+        last_scores = last_scores.filter_by(is_exam=True)
+
+    if game:
+        last_scores = last_scores.filter_by(game=game)
 
     scores = []
     for id, _, _ in last_scores:
