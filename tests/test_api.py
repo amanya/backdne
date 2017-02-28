@@ -435,3 +435,76 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
 
         self.assertEqual(json_response["username"], "pepe")
+
+
+    def test_last_scores(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        scores = [
+            (datetime.datetime(2017, 1, 1, 0, 0, 0),
+            {"game": "game1", "score": 10}),
+            (datetime.datetime(2017, 1, 2, 0, 0, 0),
+            {"game": "game1", "score": 12}),
+            (datetime.datetime(2017, 1, 3, 0, 0, 0),
+            {"game": "game2", "score": 13}),
+            (datetime.datetime(2017, 1, 4, 0, 0, 0),
+            {"game": "game3", "score": 14}),
+        ]
+        for d, s in scores:
+            s = Score(**s)
+            s.created = d
+            db.session.add(s)
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.last_scores'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        items = []
+        for item in json_response["last_scores"]:
+            items.append(item["score"])
+
+        expected = [12, 13, 14]
+
+        self.assertEqual(items, expected)
+
+
+    def test_best_scores(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        scores = [
+            Score(game='game1', score=10),
+            Score(game='game1', score=12),
+            Score(game='game1', score=14),
+            Score(game='game2', score=12),
+            Score(game='game2', score=14),
+            Score(game='game3', score=15),
+            Score(game='game3', score=16),
+        ]
+        for s in scores:
+            db.session.add(s)
+
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.best_scores'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        items = []
+        for item in json_response["best_scores"]:
+            items.append(item["score"])
+        items.sort()
+
+        expected = [14, 14, 16]
+
+        self.assertEqual(items, expected)

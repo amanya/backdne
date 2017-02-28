@@ -49,7 +49,7 @@ def last_scores():
     is_exam = request.args.get('is_exam', False, type=bool)
 
     if is_exam:
-        last_scores = db.session.query(Score.id, Score.game, func.max(Score.score)).select_from(Score) \
+        last_scores = db.session.query(Score.id, Score.game, func.max(Score.created)).select_from(Score) \
             .filter_by(is_exam=True) \
             .group_by(Score.game)
     else:
