@@ -328,6 +328,9 @@ class APITestCase(unittest.TestCase):
             (datetime.datetime(2017, 1, 1, 0, 0, 0),
              {"user_id": u.id, "game": "game_test", "score": 27, "max_score": 32, "duration": 64, "state": "running",
               "is_exam": True},),
+            (datetime.datetime(2017, 1, 1, 0, 0, 0),
+             {"user_id": u.id, "game": "game_test_2", "score": 27, "max_score": 32, "duration": 64, "state": "running",
+              "is_exam": True},),
         ]
 
         for d, s in scores:
@@ -338,12 +341,12 @@ class APITestCase(unittest.TestCase):
 
         # get the new score
         response = self.client.get(
-            url_for('api.get_user_game_scores', username=u.username, game='game_test'),
+            url_for('api.last_scores_game') + '?game=game_test',
             headers=self.get_api_headers('john', 'cat'))
         self.assertTrue(response.status_code == 200)
         json_response = json.loads(response.data.decode('utf-8'))
 
-        expected = [s[1] for s in sorted(scores, key=lambda k: k[0])]
+        expected = [s[1] for s in sorted(scores, key=lambda k: k[0]) if s[1]["game"] == "game_test"]
         scores = json_response["scores"]
 
         for a, b in zip(expected, scores):
@@ -454,7 +457,7 @@ class APITestCase(unittest.TestCase):
             {"game": "game3", "score": 14}),
         ]
         for d, s in scores:
-            s = Score(**s)
+            s = Score(user_id=u.id, state='finished', **s)
             s.created = d
             db.session.add(s)
         db.session.commit()
@@ -466,7 +469,7 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
 
         items = []
-        for item in json_response["last_scores"]:
+        for item in json_response["scores"]:
             items.append(item["score"])
 
         expected = [12, 13, 14]
@@ -481,13 +484,13 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         scores = [
-            Score(game='game1', score=10),
-            Score(game='game1', score=12),
-            Score(game='game1', score=14),
-            Score(game='game2', score=12),
-            Score(game='game2', score=14),
-            Score(game='game3', score=15),
-            Score(game='game3', score=16),
+            Score(user_id=u.id, state='finished', game='game1', score=10),
+            Score(user_id=u.id, state='finished', game='game1', score=12),
+            Score(user_id=u.id, state='finished', game='game1', score=14),
+            Score(user_id=u.id, state='finished', game='game2', score=12),
+            Score(user_id=u.id, state='finished', game='game2', score=14),
+            Score(user_id=u.id, state='finished', game='game3', score=15),
+            Score(user_id=u.id, state='finished', game='game3', score=16),
         ]
         for s in scores:
             db.session.add(s)
@@ -501,7 +504,7 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
 
         items = []
-        for item in json_response["best_scores"]:
+        for item in json_response["scores"]:
             items.append(item["score"])
         items.sort()
 
@@ -516,13 +519,13 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         scores = [
-            Score(game='game1', score=10),
-            Score(game='game1', score=12),
-            Score(game='game1', score=14),
-            Score(game='game2', score=12),
-            Score(game='game2', score=14),
-            Score(game='game3', score=15),
-            Score(game='game3', score=16),
+            Score(user_id=u.id, state='finished', game='game1', score=10),
+            Score(user_id=u.id, state='finished', game='game1', score=12),
+            Score(user_id=u.id, state='finished', game='game1', score=14),
+            Score(user_id=u.id, state='finished', game='game2', score=12),
+            Score(user_id=u.id, state='finished', game='game2', score=14),
+            Score(user_id=u.id, state='finished', game='game3', score=15),
+            Score(user_id=u.id, state='finished', game='game3', score=16),
         ]
         for s in scores:
             db.session.add(s)
@@ -536,10 +539,44 @@ class APITestCase(unittest.TestCase):
         json_response = json.loads(response.data.decode('utf-8'))
 
         items = []
-        for item in json_response["best_scores"]:
+        for item in json_response["scores"]:
             items.append(item["score"])
         items.sort()
 
         expected = [14]
 
         self.assertEqual(items, expected)
+
+
+    def test_all_scores(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        scores = [
+            {"game": "game1", "score": 10, "is_exam": True},
+            {"game": "game1", "score": 12, "is_exam": True},
+            {"game": "game2", "score": 13, "is_exam": True},
+            {"game": "game3", "score": 14, "is_exam": False},
+        ]
+        for s in scores:
+            s = Score(user_id=u.id, state='finished', **s)
+            db.session.add(s)
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.all_scores'),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        items = []
+        for item in json_response["scores"]:
+            items.append(item["score"])
+
+        expected = [10, 12, 13, 14]
+
+        self.assertEqual(items, expected)
+
+

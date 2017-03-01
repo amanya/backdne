@@ -58,21 +58,6 @@ def get_user_game_max_score(username, game):
     return jsonify({'max_score': max_score})
 
 
-@api.route('/users/<string:username>/games/<string:game>/scores')
-@permission_required(Permission.EXIST)
-def get_user_game_scores(username, game):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return 'Not found', 404
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    pagination = user.scores.paginate(
-        page, per_page=per_page,
-        error_out=False)
-    scores = pagination.items
-    return jsonify({'scores': [score.to_json() for score in scores],})
-
-
 @api.route('/login', methods=['POST'])
 def login():
     data = json.loads(request.data)
