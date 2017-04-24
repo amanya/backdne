@@ -234,6 +234,7 @@ class User(UserMixin, db.Model):
             'tutorial_completed': self.tutorial_completed,
             'exam_points': self.exam_points,
             'gender': self.gender,
+            'role': self.role.name,
             'created': self.created,
             'updated': self.updated,
         }

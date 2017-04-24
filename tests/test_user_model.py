@@ -134,6 +134,17 @@ class UserModelTestCase(unittest.TestCase):
         u.ping()
         self.assertTrue(u.updated > last_seen_before)
 
+    def test_role(self):
+        role = Role.query.filter_by(name='Teacher').first()
+        u = User(username='felix', password='cat')
+        u.role = role
+        self.assertTrue(u.is_teacher())
+        db.session.add(u)
+        db.session.commit()
+        u = User.query.filter_by(username='felix').first()
+        json_user = u.to_json()
+        self.assertEquals(json_user['role'], 'Teacher')
+
     def test_tutorial(self):
         u = User(username='felix', password='cat')
         u.tutorial_completed = True
@@ -172,7 +183,7 @@ class UserModelTestCase(unittest.TestCase):
         db.session.add(u)
         db.session.commit()
         json_user = u.to_json()
-        expected_keys = ['username', 'id', 'created', 'updated', 'tutorial_completed', 'exam_points', 'gender']
+        expected_keys = ['username', 'id', 'created', 'updated', 'tutorial_completed', 'exam_points', 'gender', 'role']
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
 
     def test_is_teacher(self):
