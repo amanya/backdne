@@ -95,21 +95,6 @@ class APITestCase(unittest.TestCase):
             headers=self.get_api_headers('', ''))
         self.assertTrue(response.status_code == 200)
 
-    def test_unconfirmed_account(self):
-        # add an unconfirmed user
-        r = Role.query.filter_by(name='Student').first()
-        self.assertIsNotNone(r)
-        u = User(username='john', password='cat', confirmed=False,
-                 role=r)
-        db.session.add(u)
-        db.session.commit()
-
-        # get list of posts with the unconfirmed account
-        response = self.client.get(
-            url_for('api.get_schools'),
-            headers=self.get_api_headers('john', 'cat'))
-        self.assertTrue(response.status_code == 403)
-
     def test_schools(self):
         # add a user
         r = Role.query.filter_by(name='Administrator').first()
