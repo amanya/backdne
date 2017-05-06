@@ -104,7 +104,7 @@ def add_user():
         user = User()
         user.username = form.username.data
         user.password = form.password.data
-        user.role_id = form.role.data
+        user.role = Role.query.get(form.role.data)
         user.confirmed = True
         db.session.add(user)
         flash('The user {} has been created'.format(user.username))
