@@ -75,7 +75,7 @@ def scores():
     scores = pagination.items
     return render_template('scores.html', scores=scores, pagination=pagination)
 
-@main.route('/users', methods=['GET', 'POST'])
+@main.route('/users', methods=['GET'])
 @login_required
 def users():
     form = UserForm()
@@ -93,6 +93,22 @@ def users():
         error_out=False)
     users = pagination.items
     return render_template('users.html', form=form, users=users, pagination=pagination)
+
+
+@main.route('/add-user', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_user():
+    form = UserForm()
+    if current_user.can(Permission.CREATE_USERS) and form.validate_on_submit():
+        user = User()
+        user.username = form.username.data
+        user.password = form.password.data
+        user.role_id = form.role.data
+        db.session.add(user)
+        flash('The user {} has been created'.format(user.username))
+        return redirect(url_for('.users'))
+    return render_template('edit_profile.html', form=form)
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required

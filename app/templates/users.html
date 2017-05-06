@@ -4,7 +4,10 @@
 
 {% block title %}Backend - Users{% endblock %}
 
+
 {% block page_content %}
+<a class="btn btn-default" href="{{ url_for('.add_user') }}">Add User</a>
+
 <div class="user-tabs">
     {% include '_users.html' %}
 </div>
