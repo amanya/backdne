@@ -22,6 +22,7 @@ class FlaskClientTestCase(unittest.TestCase):
         response = self.client.get(url_for('main.index'))
         self.assertTrue(b'Stranger' in response.data)
 
+    @unittest.skip("Student users cannot longer log in")
     def test_register_and_login(self):
         # register a new account
         response = self.client.post(url_for('auth.register'), data={
@@ -34,7 +35,7 @@ class FlaskClientTestCase(unittest.TestCase):
 
         # login with the new account
         response = self.client.post(url_for('auth.login'), data={
-            'email': 'john@example.com',
+            'username': 'john',
             'password': 'cat'
         }, follow_redirects=True)
         self.assertTrue(re.search(b'Hello,\s+john!', response.data))
