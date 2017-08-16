@@ -35,8 +35,11 @@ class EditProfileAdminForm(FlaskForm):
         super(EditProfileAdminForm, self).__init__(*args, **kwargs)
         self.role.choices = [(role.id, role.name)
                              for role in Role.query.order_by(Role.name).all()]
-        self.teacher.choices = [(teacher.id, teacher.name)
-                                for teacher in User.query.filter(User.role_id == r.id).order_by(User.name).all()]
+        if user.is_student():
+            self.teacher.choices = [(teacher.id, teacher.name)
+                                    for teacher in User.query.filter(User.role_id == r.id).order_by(User.name).all()]
+        else:
+            del(self.teacher)
         self.schools.choices = [(school.id, school.name)
                                for school in School.query.order_by(School.name).all()]
         self.user = user
