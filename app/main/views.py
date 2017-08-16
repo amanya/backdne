@@ -1,7 +1,8 @@
 from flask import render_template, redirect, url_for, abort, flash, request, \
-    current_app
+    current_app, make_response
 from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
+from sqlalchemy import text
 
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm
@@ -174,3 +175,44 @@ def edit_school(id):
     form.email.data = school.email
     form.description.data = school.description
     return render_template('edit_school.html', form=form, user=user)
+
+@main.route('/school-stats')
+@login_required
+@admin_required
+def school_stats():
+    sql = text('''
+    SELECT s.name, teacher_id, t.user_id, duration, total_pages_viewed FROM (
+        SELECT user_id, teacher_id, duration, total_pages_viewed FROM (
+            SELECT user_id, SUM(duration) AS duration, SUM(total_pages_viewed) AS total_pages_viewed FROM lessons WHERE lesson ~ 'lesson_*' GROUP BY user_id
+        ) t JOIN users u ON t.user_id = u.id
+    ) t INNER JOIN users_schools us ON t.user_id = us.user_id INNER JOIN schools s ON us.school_id = s.id;
+    ''')
+    result = db.engine.execute(sql)
+
+    data = ['school|teacher_id|user_id|duration|total_pages_viewed']
+    for row in result:
+        data.append('|'.join([r and str(r) or "0" for r in row]))
+
+    resp = make_response("\n".join(data))
+    resp.headers['content-type'] = 'text/plain'
+    return resp
+
+@main.route('/user-stats')
+@login_required
+@admin_required
+def user_stats():
+    data = ['user_id|game|score|duration|start_time|end_time']
+
+    for game_type in ["lesson_", "game_", "quiz_"]:
+        sql = text('''
+        SELECT user_id, game, SUM(score) as score, SUM(duration) AS duration, MIN(created) AS start_time, MAX(created) AS end_time FROM scores WHERE game ~ '{}*' GROUP BY game, user_id ORDER BY user_id;
+        '''.format(game_type))
+        result = db.engine.execute(sql)
+
+        for row in result:
+            data.append('|'.join([r and str(r) or "0" for r in row]))
+
+    resp = make_response("\n".join(data))
+    resp.headers['content-type'] = 'text/plain'
+    return resp
+
