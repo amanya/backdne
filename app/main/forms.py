@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SelectField, \
-    SubmitField, PasswordField
+    SubmitField, PasswordField, SelectMultipleField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
 from flask_pagedown.fields import PageDownField
@@ -26,12 +26,19 @@ class EditProfileAdminForm(FlaskForm):
     confirmed = BooleanField('Confirmed')
     role = SelectField('Role', coerce=int)
     name = StringField('Real name', validators=[Length(0, 64)])
+    teacher = SelectField('Teacher', coerce=int)
+    schools = SelectMultipleField('School', coerce=int)
     submit = SubmitField('Submit')
 
     def __init__(self, user, *args, **kwargs):
+        r = Role.query.filter_by(name='Teacher').first()
         super(EditProfileAdminForm, self).__init__(*args, **kwargs)
         self.role.choices = [(role.id, role.name)
                              for role in Role.query.order_by(Role.name).all()]
+        self.teacher.choices = [(teacher.id, teacher.name)
+                                for teacher in User.query.filter(User.role_id == r.id).order_by(User.name).all()]
+        self.schools.choices = [(school.id, school.name)
+                               for school in School.query.order_by(School.name).all()]
         self.user = user
 
     def validate_email(self, field):

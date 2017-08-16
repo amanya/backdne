@@ -22,7 +22,7 @@ class Permission:
 
 class Role(db.Model):
     __tablename__ = 'roles'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
@@ -61,9 +61,16 @@ class UserSchool(db.Model):
     school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), primary_key=True)
     created = db.Column(db.DateTime, default=func.now())
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    user = db.relationship('User', back_populates='schools')
-    school = db.relationship('School', back_populates='users')
 
+    user = db.relationship('User', backref=db.backref('users_schools', cascade='all, delete-orphan'))
+    school = db.relationship('School', backref=db.backref('users_schools', cascade='all, delete-orphan'))
+
+    def __init__(self, user=None, school=None):
+        self.user = user
+        self.school = school
+
+    def __repr__(self):
+        return '<UserSchool {%r} {%r}>' % (self.user.name, self.school.name)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -71,6 +78,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     tutorial_completed = db.Column(db.Boolean, default=False)
@@ -80,7 +88,9 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(32))
     created = db.Column(db.DateTime, default=func.now())
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    schools = db.relationship('UserSchool', back_populates="user")
+
+    schools = db.relationship('School', secondary="users_schools", viewonly=True)
+
     scores = db.relationship('Score', backref='user', lazy='dynamic', order_by="Score.created")
 
     @staticmethod
@@ -116,6 +126,18 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(default=True).first()
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
+
+        self.schools = []
+
+    @property
+    def teacher(self):
+        if not self.teacher_id:
+            return None
+        return User.query.get(self.teacher_id)
+
+    @teacher.setter
+    def teacher(self, teacher):
+        self.teacher_id = teacher.id
 
     @property
     def password(self):
@@ -213,10 +235,19 @@ class User(UserMixin, db.Model):
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 
-    def add_to_school(self, school):
-        if not self.member_of_school(school):
-            f = UserSchool(user=self, school=school)
-            db.session.add(f)
+    def add_to_schools(self, schools):
+        self.users_schools = []
+        for s in schools:
+            school = School.query.get(s)
+            self.users_schools.append(UserSchool(user=self, school=school))
+
+    def add_teacher(self, teacher):
+        if not self.is_student():
+            raise ValidationError('User is not a student')
+        if not teacher.is_teacher():
+            raise ValidationError('User is not a teacher')
+        self.teachers = []
+        self.teachers.append(TeacherStudent(student=self, teacher=teacher))
 
     def remove_from_school(self, school):
         f = self.schools.filter_by(school_id=school.id).first()
@@ -226,6 +257,13 @@ class User(UserMixin, db.Model):
     def member_of_school(self, school):
         return self.schools.filter_by(
             school_id=school.id).first() is not None
+
+    def assign_teacher(self, teacher):
+        if not self.is_student():
+            raise ValidationError('User is not a student')
+        if not teacher.is_teacher():
+            raise ValidationError('User is not a teacher')
+        teacher = Teacher()
 
     def to_json(self):
         json_user = {
@@ -311,7 +349,8 @@ class School(db.Model):
     description = db.Column(db.Text())
     created = db.Column(db.DateTime, default=func.now())
     updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    users = db.relationship('UserSchool', back_populates="school", lazy="dynamic")
+
+    users = db.relationship('User', secondary='users_schools', viewonly=True)
 
     @staticmethod
     def generate_fake(count=10):
@@ -320,17 +359,10 @@ class School(db.Model):
 
         seed()
         for i in range(count):
-            teachers = sample(list(User.teachers()), randint(5, 10))
-            students = sample(list(User.students()), randint(10, 30))
             s = School(name=forgery_py.internet.user_name(),
                        description=forgery_py.lorem_ipsum.sentences(5),
                        created=forgery_py.date.date(True))
-            for teacher in teachers:
-                s.add_teacher(teacher)
-            for student in students:
-                s.add_student(student)
             db.session.add(s)
-            db.session.commit()
 
     @property
     def teachers(self):
@@ -349,16 +381,12 @@ class School(db.Model):
     def add_teacher(self, user):
         if not user.is_teacher():
             raise ValidationError('User is not a teacher')
-        u2s = UserSchool()
-        u2s.user = user
-        self.users.append(u2s)
-        db.session.add(u2s)
+        self.users_schools.append(UserSchool(user=user, school=self))
 
     def add_student(self, user):
         if not user.is_student():
             raise ValidationError('User is not a student')
-        u2s = UserSchool(user=user, school=self)
-        db.session.add(u2s)
+        self.users_schools.append(UserSchool(user=user, school=self))
 
     def to_json(self):
         json_school = {

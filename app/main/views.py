@@ -136,6 +136,8 @@ def edit_profile_admin(id):
         user.confirmed = form.confirmed.data
         user.role = Role.query.get(form.role.data)
         user.name = form.name.data
+        user.add_to_schools(form.schools.data)
+        user.teacher = User.query.get(form.teacher.data)
         db.session.add(user)
         flash('The profile has been updated.')
         return redirect(url_for('.user', username=user.username))
@@ -144,6 +146,9 @@ def edit_profile_admin(id):
     form.confirmed.data = user.confirmed
     form.role.data = user.role_id
     form.name.data = user.name
+    form.schools.data = [s.id for s in user.schools]
+    if user.teacher:
+        form.teacher.data = user.teacher.id
     return render_template('edit_profile.html', form=form, user=user)
 
 
