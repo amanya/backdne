@@ -6,3 +6,4 @@ coverage
 httpie
 requests
 selenium
+psycopg2
