@@ -21,6 +21,10 @@ class Config:
     BACKEND_COMMENTS_PER_PAGE = 30
     BACKEND_SLOW_DB_QUERY_TIME = 0.5
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    S3_BUCKET = os.environ.get('S3_BUCKET')
+    AWS_REGION = 'eu-west-1'
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
     @staticmethod
     def init_app(app):

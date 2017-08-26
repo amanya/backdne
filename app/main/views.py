@@ -1,3 +1,5 @@
+import boto3
+from flask import json
 from flask import render_template, redirect, url_for, abort, flash, request, \
     current_app, make_response
 from flask_login import login_required, current_user
@@ -5,10 +7,10 @@ from flask_sqlalchemy import get_debug_queries
 from sqlalchemy import text
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm
 from .. import db
 from ..decorators import admin_required
-from ..models import Role, User, School, Permission, Score
+from ..models import Role, User, School, Permission, Score, Asset
 
 
 @main.after_app_request
@@ -197,6 +199,7 @@ def school_stats():
     resp.headers['content-type'] = 'text/plain'
     return resp
 
+
 @main.route('/user-stats')
 @login_required
 @admin_required
@@ -216,3 +219,60 @@ def user_stats():
     resp.headers['content-type'] = 'text/plain'
     return resp
 
+
+@main.route('/assets')
+@login_required
+@admin_required
+def assets():
+    page = request.args.get('page', 1, type=int)
+    query = Asset.query
+    pagination = query.order_by(Asset.file_name.desc()).paginate(
+        page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
+        error_out=False)
+    assets = pagination.items
+    return render_template('assets.html', assets=assets, pagination=pagination)
+
+
+@main.route('/upload-asset', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def upload_asset():
+    form = AssetForm()
+    if form.validate_on_submit():
+        asset = Asset()
+        asset.file_name = form.file_name.data
+        asset.file_type = form.file_type.data
+        db.session.add(asset)
+        return redirect(url_for('.assets'))
+    return render_template('upload_asset.html', form=form)
+
+
+@main.route('/sign-s3/')
+@login_required
+@admin_required
+def sign_s3():
+    S3_BUCKET = current_app.config['S3_BUCKET']
+    AWS_REGION = current_app.config['AWS_REGION']
+
+    file_name = request.args.get('file-name')
+    file_type = request.args.get('file-type')
+
+    s3 = boto3.client('s3')
+
+    presigned_post = s3.generate_presigned_post(
+        Bucket = S3_BUCKET,
+        Key = 'assets/{}'.format(file_name),
+        Fields = {"acl": "public-read", "Content-Type": file_type},
+        Conditions = [
+            {"acl": "public-read"},
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn = 3600
+    )
+
+    return json.dumps({
+        'data': presigned_post,
+        'file_name': file_name,
+        'file_type': file_type,
+        'url': 'https://s3-{}.amazonaws.com/{}/assets/{}'.format(AWS_REGION, S3_BUCKET, file_name)
+    })

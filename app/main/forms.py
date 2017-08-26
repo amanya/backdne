@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SelectField, \
-    SubmitField, PasswordField, SelectMultipleField
+    SubmitField, PasswordField, SelectMultipleField, HiddenField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
 from flask_pagedown.fields import PageDownField
@@ -105,3 +105,9 @@ class EditSchoolForm(FlaskForm):
 class CommentForm(FlaskForm):
     body = StringField('Enter your comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+class AssetForm(FlaskForm):
+    file_name = HiddenField('Name of the asset', validators=[Length(0, 128)])
+    file_type = HiddenField('Type of the asset', validators=[Length(0, 64)])
+    submit = SubmitField('Submit')
+
