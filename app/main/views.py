@@ -53,6 +53,7 @@ def school(id):
 
 
 @main.route('/schools', methods=['GET', 'POST'])
+@login_required
 def schools():
     form = SchoolForm()
     if current_user.can(Permission.CREATE_SCHOOLS) and form.validate_on_submit():
