@@ -126,7 +126,10 @@ def edit_profile_admin(id):
     user = User.query.get_or_404(id)
     form = EditProfileAdminForm(user=user)
     if form.validate_on_submit():
-        user.email = form.email.data
+        if form.email.data == "":
+            user.email = None
+        else:
+            user.email = form.email.data
         user.username = form.username.data
         user.confirmed = form.confirmed.data
         user.role = Role.query.get(form.role.data)
