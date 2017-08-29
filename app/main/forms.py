@@ -17,6 +17,19 @@ class EditProfileForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class DeleteUserForm(FlaskForm):
+    check_username = StringField('Repeat username to delete')
+    submit = SubmitField('Submit')
+
+    def __init__(self, user, *args, **kwargs):
+        super(DeleteUserForm, self).__init__(*args, **kwargs)
+        self.user = user
+
+    def validate_check_username(self, field):
+        if field.data != self.user.username:
+            raise ValidationError('Wrong username')
+
+
 class EditProfileAdminForm(FlaskForm):
     email = StringField('Email')
     username = StringField('Username', validators=[

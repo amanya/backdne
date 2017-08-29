@@ -7,7 +7,8 @@ from flask_sqlalchemy import get_debug_queries
 from sqlalchemy import text
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm, \
+    DeleteUserForm
 from .. import db
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission, Score, Asset
@@ -105,6 +106,17 @@ def add_user():
         flash('The user {} has been created'.format(user.username))
         return redirect(url_for('.users'))
     return render_template('edit_profile.html', form=form)
+
+@main.route('/delete-user/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    form = DeleteUserForm(user=user)
+    if form.validate_on_submit():
+        db.session.delete(user)
+        return redirect(url_for('.users'))
+    return render_template('delete_user.html', user=user, form=form)
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
