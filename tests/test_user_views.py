@@ -29,6 +29,6 @@ class UserViewTestCase(unittest.TestCase):
         self.app_context.pop()
 
     def test_user_should_not_be_visible_if_logged_out(self):
-        response = self.client.get(url_for('main.user', username='Administrator'), follow_redirects=True)
+        response = self.client.get(url_for('main.user', username='foo'), follow_redirects=True)
 
         self.assertTrue(re.search(b'Login', response.data))
