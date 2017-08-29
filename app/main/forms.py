@@ -17,6 +17,11 @@ class EditProfileForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class ChangePasswordAdminForm(FlaskForm):
+    new_password = PasswordField('New password')
+    submit = SubmitField('Submit')
+
+
 class DeleteUserForm(FlaskForm):
     check_username = StringField('Repeat username to delete')
     submit = SubmitField('Submit')
