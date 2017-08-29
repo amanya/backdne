@@ -5,7 +5,7 @@ from flask import url_for
 
 from app import db, create_app
 from app.main.views import edit_profile_admin
-from app.models import User, Role
+from app.models import User, Role, School
 
 
 class SchoolViewTestCase(unittest.TestCase):
@@ -30,5 +30,15 @@ class SchoolViewTestCase(unittest.TestCase):
 
     def test_schools_should_not_be_visible_if_logged_out(self):
         response = self.client.get(url_for('main.schools'), follow_redirects=True)
+
+        self.assertTrue(re.search(b'Login', response.data))
+
+    def test_school_should_not_be_visible_if_logged_out(self):
+        school = School()
+        school.name = 'hogwarts'
+        db.session.add(school)
+        db.session.commit()
+
+        response = self.client.get(url_for('main.school', id=school.id), follow_redirects=True)
 
         self.assertTrue(re.search(b'Login', response.data))

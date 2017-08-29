@@ -47,6 +47,7 @@ def user(username):
 
 
 @main.route('/school/<id>', methods=['GET', 'POST'])
+@login_required
 def school(id):
     school = School.query.filter_by(id=id).first_or_404()
     return render_template('school.html', school=school)
