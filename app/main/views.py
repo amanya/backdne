@@ -8,10 +8,10 @@ from sqlalchemy import text
 
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm, \
-    DeleteUserForm, DeleteSchoolForm, ChangePasswordAdminForm
+    DeleteUserForm, DeleteSchoolForm, ChangePasswordAdminForm, GameDataForm
 from .. import db
 from ..decorators import admin_required
-from ..models import Role, User, School, Permission, Score, Asset
+from ..models import Role, User, School, Permission, Score, Asset, GameData
 
 
 @main.after_app_request
@@ -251,6 +251,31 @@ def user_stats():
     resp = make_response("\n".join(data))
     resp.headers['content-type'] = 'text/plain'
     return resp
+
+
+@main.route('/game-data')
+@login_required
+@admin_required
+def game_data():
+    page = request.args.get('page', 1, type=int)
+    query = GameData.query
+    pagination = query.order_by(GameData.file_name.desc()).paginate(
+        page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
+        error_out=False)
+    game_data = pagination.items
+    return render_template('game_data.html', game_data=game_data, pagination=pagination)
+
+
+@main.route('/edit-game-data/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_game_data(id):
+    game_data = GameData.query.get(id)
+    form = GameDataForm(game_data=game_data)
+    if form.validate_on_submit():
+        game_data.content = form.file_content.data
+        return redirect(url_for('.game_data'))
+    return render_template('edit_game_data.html', form=form, game_data=game_data)
 
 
 @main.route('/assets')

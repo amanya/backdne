@@ -29,6 +29,7 @@
                 <li><a href="{{ url_for('main.schools', username=current_user.username) }}">Schools</a></li>
                 <li><a href="{{ url_for('main.scores', username=current_user.username) }}">Scores</a></li>
                 <li><a href="{{ url_for('main.assets') }}">Assets</a></li>
+                <li><a href="{{ url_for('main.game_data') }}">Game Data</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>

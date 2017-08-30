@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Backend - Edit Game Data{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Edit Game Data ({{ game_data.file_name }})</h1>
+</div>
+
+<div class="col-md-4">
+    {{ wtf.quick_form(form) }}
+</div>
+{% endblock %}

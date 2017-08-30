@@ -138,8 +138,19 @@ class CommentForm(FlaskForm):
     body = StringField('Enter your comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
+
 class AssetForm(FlaskForm):
     file_name = HiddenField('Name of the asset', validators=[Length(0, 128)])
     file_type = HiddenField('Type of the asset', validators=[Length(0, 64)])
     submit = SubmitField('Submit')
+
+
+class GameDataForm(FlaskForm):
+    file_content = TextAreaField('Game Data content', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+    def __init__(self, game_data, *args, **kwargs):
+        super(GameDataForm, self).__init__(*args, **kwargs)
+        if not self.file_content.data:
+            self.file_content.data = game_data.content
 
