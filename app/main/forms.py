@@ -152,5 +152,5 @@ class GameDataForm(FlaskForm):
     def __init__(self, game_data, *args, **kwargs):
         super(GameDataForm, self).__init__(*args, **kwargs)
         if not self.file_content.data:
-            self.file_content.data = game_data.content
+            self.file_content.data = game_data.content.decode()
 
