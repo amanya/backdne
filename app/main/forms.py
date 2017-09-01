@@ -145,6 +145,10 @@ class AssetForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class DeleteAssetForm(FlaskForm):
+    submit = SubmitField('Delete asset')
+
+
 class GameDataForm(FlaskForm):
     file_content = TextAreaField('Game Data content', validators=[DataRequired()])
     submit = SubmitField('Submit')

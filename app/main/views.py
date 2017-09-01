@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm, \
-    DeleteUserForm, DeleteSchoolForm, ChangePasswordAdminForm, GameDataForm
+    DeleteUserForm, DeleteSchoolForm, ChangePasswordAdminForm, GameDataForm, DeleteAssetForm
 from .. import db
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission, Score, Asset, GameData
@@ -303,6 +303,20 @@ def upload_asset():
         db.session.add(asset)
         return redirect(url_for('.assets'))
     return render_template('upload_asset.html', form=form)
+
+
+@main.route('/delete-asset/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_asset(id):
+    asset = Asset.query.filter_by(id=id).first_or_404()
+    form = DeleteAssetForm()
+    if form.validate_on_submit():
+        s3 = boto3.client('s3')
+        s3.delete_object(Bucket=current_app.config['S3_BUCKET'], Key='assets/{}'.format(asset.file_name))
+        db.session.delete(asset)
+        return redirect(url_for('.assets'))
+    return render_template('delete_asset.html', form=form, asset=asset)
 
 
 @main.route('/sign-s3/')

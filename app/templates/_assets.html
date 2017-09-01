@@ -5,6 +5,7 @@
             <th>Name</th>
             <th>Type</th>
             <th>Url</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -13,6 +14,7 @@
             <td>{{ asset.file_name }}</td>
             <td>{{ asset.file_type }}</td>
             <td><a target="_blank" href="{{ asset.url }}">{{ asset.url }}</a></td>
+            <td><a class="btn btn-danger" href="{{ url_for('.delete_asset', id=asset.id) }}">Delete</a></td>
         </tr>
         {% endfor %}
         </tbody>
