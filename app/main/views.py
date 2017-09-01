@@ -312,7 +312,7 @@ def delete_asset(id):
     asset = Asset.query.filter_by(id=id).first_or_404()
     form = DeleteAssetForm()
     if form.validate_on_submit():
-        s3 = boto3.client('s3')
+        s3 = boto3.client('s3', current_app.config['AWS_REGION'])
         s3.delete_object(Bucket=current_app.config['S3_BUCKET'], Key='assets/{}'.format(asset.file_name))
         db.session.delete(asset)
         return redirect(url_for('.assets'))
@@ -329,7 +329,7 @@ def sign_s3():
     file_name = request.args.get('file-name')
     file_type = request.args.get('file-type')
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', AWS_REGION)
 
     presigned_post = s3.generate_presigned_post(
         Bucket = S3_BUCKET,
@@ -346,5 +346,5 @@ def sign_s3():
         'data': presigned_post,
         'file_name': file_name,
         'file_type': file_type,
-        'url': 'https://s3-{}.amazonaws.com/{}/assets/{}'.format(AWS_REGION, S3_BUCKET, file_name)
+        'url': 'https://s3.amazonaws.com/{}/assets/{}'.format(S3_BUCKET, file_name)
     })

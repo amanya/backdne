@@ -544,7 +544,7 @@ class Asset(db.Model):
     def url(self):
         S3_BUCKET = current_app.config['S3_BUCKET']
         AWS_REGION = current_app.config['AWS_REGION']
-        return 'https://s3-{}.amazonaws.com/{}/assets/{}'.format(AWS_REGION, S3_BUCKET, self.file_name)
+        return 'https://s3.amazonaws.com/{}/assets/{}'.format(S3_BUCKET, self.file_name)
 
 class GameData(db.Model):
     __tablename__ = 'game_data'
@@ -556,7 +556,7 @@ class GameData(db.Model):
     def url(self):
         S3_BUCKET = current_app.config['S3_BUCKET']
         AWS_REGION = current_app.config['AWS_REGION']
-        return 'https://s3-{}.amazonaws.com/{}/game_data/{}'.format(AWS_REGION, S3_BUCKET, self.file_name)
+        return 'https://s3.amazonaws.com/{}/game_data/{}'.format(S3_BUCKET, self.file_name)
 
     @staticmethod
     def insert_game_data():
@@ -582,14 +582,14 @@ class GameData(db.Model):
 
     @property
     def content(self):
-       s3 = boto3.resource('s3')
+       s3 = boto3.resource('s3', current_app.config['AWS_REGION'])
        object = s3.Object(current_app.config['S3_BUCKET'], 'game_data/{}'.format(self.file_name))
        content = object.get()['Body'].read()
        return content
 
     @content.setter
     def content(self, content):
-        s3 = boto3.resource('s3')
+        s3 = boto3.resource('s3', current_app.config['AWS_REGION'])
         object = s3.Object(current_app.config['S3_BUCKET'], 'game_data/{}'.format(self.file_name))
         object.put(Body=content)
 
