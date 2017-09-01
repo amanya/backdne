@@ -93,6 +93,7 @@ class User(UserMixin, db.Model):
     schools = db.relationship('School', secondary="users_schools", viewonly=True)
 
     scores = db.relationship('Score', backref='user', lazy='dynamic', order_by="Score.created")
+    lessons = db.relationship('Lesson', backref='user', lazy='dynamic', order_by="Lesson.created")
 
     @staticmethod
     def generate_fake(count=100):
