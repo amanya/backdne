@@ -21,10 +21,9 @@ class SchoolModelTestCase(unittest.TestCase):
     def test_add_teacher(self):
         s = School(name="Test")
         u = User(username="test")
-        role = Role.query.filter_by(name='Teacher').first()
         with self.assertRaises(ValidationError):
             s.add_teacher(u)
-        u.role = role
+        u.role = Role.get('Teacher')
         s.add_teacher(u)
         db.session.add(s)
         db.session.commit()
@@ -33,12 +32,10 @@ class SchoolModelTestCase(unittest.TestCase):
     def test_add_student(self):
         s = School(name="Test")
         u = User(username="test")
-        role = Role.query.filter_by(name='Teacher').first()
-        u.role = role
+        u.role = Role.get('Teacher')
         with self.assertRaises(ValidationError):
             s.add_student(u)
-        role = Role.query.filter_by(name='Student').first()
-        u.role = role
+        u.role = Role.get('Student')
         s.add_student(u)
         db.session.add(s)
         db.session.commit()
@@ -48,11 +45,10 @@ class SchoolModelTestCase(unittest.TestCase):
         s = School(name="Test")
         u1 = User(username="u1", email='student1@example.com')
         u2 = User(username="u2", email='student2@example.com')
-        role = Role.query.filter_by(name='Teacher').first()
         u3 = User(username="u3", email='teacher1@example.com')
-        u3.role = role
+        u3.role = Role.get('Teacher')
         u4 = User(username="u4", email='teacher2@example.com')
-        u4.role = role
+        u4.role = Role.get('Teacher')
         s.add_student(u1)
         s.add_student(u2)
         s.add_teacher(u3)
@@ -65,11 +61,10 @@ class SchoolModelTestCase(unittest.TestCase):
         s = School(name="Test")
         u1 = User(username="u1", email='student1@example.com')
         u2 = User(username="u2", email='student2@example.com')
-        role = Role.query.filter_by(name='Teacher').first()
         u3 = User(username="u3", email='teacher1@example.com')
-        u3.role = role
+        u3.role = Role.get('Teacher')
         u4 = User(username="u4", email='teacher2@example.com')
-        u4.role = role
+        u4.role = Role.get('Teacher')
         s.add_student(u1)
         s.add_student(u2)
         s.add_teacher(u3)

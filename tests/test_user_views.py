@@ -4,8 +4,7 @@ import unittest
 from flask import url_for
 
 from app import db, create_app
-from app.main.views import edit_profile_admin
-from app.models import User, Role, School
+from app.models import User, Role
 
 
 class UserViewTestCase(unittest.TestCase):
@@ -19,8 +18,7 @@ class UserViewTestCase(unittest.TestCase):
         self.client = self.app.test_client(use_cookies=True)
         u = User(username='foo', password='bar')
         u.confirmed = True
-        r = Role.query.filter_by(name='Administrator').first()
-        u.role = r
+        u.role = Role.get('Administrator')
         db.session.add(u)
 
     def tearDown(self):

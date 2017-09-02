@@ -46,7 +46,7 @@ class APITestCase(unittest.TestCase):
 
     def test_bad_auth(self):
         # add a user
-        r = Role.query.filter_by(name='Student').first()
+        r = Role.get('Student')
         self.assertIsNotNone(r)
         u = User(email='john@example.com', password='cat', confirmed=True,
                  role=r)
@@ -61,10 +61,8 @@ class APITestCase(unittest.TestCase):
 
     def test_token_auth(self):
         # add a user
-        r = Role.query.filter_by(name='Student').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Student'))
         db.session.add(u)
         db.session.commit()
 
@@ -97,10 +95,8 @@ class APITestCase(unittest.TestCase):
 
     def test_schools(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -132,9 +128,8 @@ class APITestCase(unittest.TestCase):
 
         # add student to school
         school_id = json_response['id']
-        student_role = Role.query.filter_by(name='Student').first()
         student = User(email='student@example.com', password='dog', username='student', confirmed=True,
-                       role=student_role)
+                       role=Role.get('Student'))
         db.session.add(student)
         db.session.commit()
 
@@ -154,9 +149,8 @@ class APITestCase(unittest.TestCase):
         self.assertTrue(json_response['students'][0]['username'] == 'student')
 
         # add teacher to school
-        teacher_role = Role.query.filter_by(name='Teacher').first()
         teacher = User(email='teacher@example.com', password='dog', username='teacher', confirmed=True,
-                       role=teacher_role)
+                       role=Role.get('Teacher'))
         db.session.add(teacher)
         db.session.commit()
 
@@ -177,7 +171,7 @@ class APITestCase(unittest.TestCase):
 
     def test_users(self):
         # add two users
-        r = Role.query.filter_by(name='Student').first()
+        r = Role.get('Student')
         self.assertIsNotNone(r)
         u1 = User(email='john@example.com', username='john',
                   password='cat', confirmed=True, role=r)
@@ -225,10 +219,8 @@ class APITestCase(unittest.TestCase):
 
     def test_create_score(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -252,10 +244,8 @@ class APITestCase(unittest.TestCase):
 
     def test_get_user_game_max_score_not_found(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -266,10 +256,8 @@ class APITestCase(unittest.TestCase):
 
     def test_get_user_game_max_score(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -296,10 +284,8 @@ class APITestCase(unittest.TestCase):
 
     def test_get_user_game_scores(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -339,10 +325,8 @@ class APITestCase(unittest.TestCase):
 
     def test_create_lesson(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 
@@ -369,10 +353,8 @@ class APITestCase(unittest.TestCase):
 
     def test_get_finished_lessons(self):
         # add a user
-        r = Role.query.filter_by(name='Administrator').first()
-        self.assertIsNotNone(r)
         u = User(username='john', password='cat', confirmed=True,
-                 role=r)
+                 role=Role.get('Administrator'))
         db.session.add(u)
         db.session.commit()
 

@@ -19,8 +19,7 @@ class SchoolViewTestCase(unittest.TestCase):
         self.client = self.app.test_client(use_cookies=True)
         u = User(username='foo', password='bar')
         u.confirmed = True
-        r = Role.query.filter_by(name='Administrator').first()
-        u.role = r
+        u.role = Role.get('Administrator')
         db.session.add(u)
 
     def tearDown(self):

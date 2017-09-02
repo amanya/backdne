@@ -135,9 +135,8 @@ class UserModelTestCase(unittest.TestCase):
         self.assertTrue(u.updated > last_seen_before)
 
     def test_role(self):
-        role = Role.query.filter_by(name='Teacher').first()
         u = User(username='felix', password='cat')
-        u.role = role
+        u.role = Role.get('Teacher')
         self.assertTrue(u.is_teacher())
         db.session.add(u)
         db.session.commit()
@@ -187,39 +186,33 @@ class UserModelTestCase(unittest.TestCase):
         self.assertEqual(sorted(json_user.keys()), sorted(expected_keys))
 
     def test_is_teacher(self):
-        role = Role.query.filter_by(name='Teacher').first()
         u = User(email='john@example.com', password='cat')
-        u.role = role
+        u.role = Role.get('Teacher')
         self.assertTrue(u.is_teacher())
 
     def test_is_not_teacher(self):
-        role = Role.query.filter_by(name='Student').first()
         u = User(email='john@example.com', password='cat')
-        u.role = role
+        u.role = Role.get('Student')
         self.assertFalse(u.is_teacher())
 
     def test_is_student(self):
-        role = Role.query.filter_by(name='Student').first()
         u = User(email='john@example.com', password='cat')
-        u.role = role
+        u.role = Role.get('Student')
         self.assertTrue(u.is_student())
 
     def test_is_not_student(self):
-        role = Role.query.filter_by(name='Teacher').first()
         u = User(email='john@example.com', password='cat')
-        u.role = role
+        u.role = Role.get('Teacher')
         self.assertFalse(u.is_student())
 
     def test_user_is_teacher_by_default(self):
         u = User(email='john@example.com', password='cat')
-        role = Role.query.filter_by(name='Student').first()
-        self.assertEquals(role, u.role)
+        self.assertEquals(Role.get('Student'), u.role)
 
     def test_get_students(self):
-        role = Role.query.filter_by(name='Teacher').first()
         student = User(email='student@example.com', password='cat')
         teacher = User(email='teacher@example.com', password='cat')
-        teacher.role = role
+        teacher.role = Role.get('Teacher')
         db.session.add(teacher)
         db.session.add(student)
         db.session.commit()
@@ -227,10 +220,9 @@ class UserModelTestCase(unittest.TestCase):
         self.assertNotIn(teacher, User.students().all())
 
     def test_get_teachers(self):
-        role = Role.query.filter_by(name='Teacher').first()
         student = User(email='student@example.com', password='cat')
         teacher = User(email='teacher@example.com', password='cat')
-        teacher.role = role
+        teacher.role = Role.get('Teacher')
         db.session.add(teacher)
         db.session.add(student)
         db.session.commit()
