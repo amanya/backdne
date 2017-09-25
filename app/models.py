@@ -97,6 +97,7 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def import_students():
+        from sqlalchemy.exc import IntegrityError
         import csv
         with open('import/students.csv') as csvfile:
             csvreader = csv.reader(csvfile, delimiter=',')
@@ -106,8 +107,8 @@ class User(UserMixin, db.Model):
                          password=password,
                          confirmed=True,
                          name=username,
-                         role=Role.get('Student'))
-                u.add_teacher(teacher)
+                         role=Role.get('Student'),
+                         teacher=teacher)
                 db.session.add(u)
                 try:
                     db.session.commit()
