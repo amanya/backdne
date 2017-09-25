@@ -263,14 +263,6 @@ class User(UserMixin, db.Model):
             school = School.query.get(s)
             self.users_schools.append(UserSchool(user=self, school=school))
 
-    def add_teacher(self, teacher):
-        if not self.is_student():
-            raise ValidationError('User is not a student')
-        if not teacher.is_teacher():
-            raise ValidationError('User is not a teacher')
-        self.teachers = []
-        self.teachers.append(TeacherStudent(student=self, teacher=teacher))
-
     def remove_from_school(self, school):
         f = self.schools.filter_by(school_id=school.id).first()
         if f:
@@ -279,13 +271,6 @@ class User(UserMixin, db.Model):
     def member_of_school(self, school):
         return self.schools.filter_by(
             school_id=school.id).first() is not None
-
-    def assign_teacher(self, teacher):
-        if not self.is_student():
-            raise ValidationError('User is not a student')
-        if not teacher.is_teacher():
-            raise ValidationError('User is not a teacher')
-        teacher = Teacher()
 
     def to_json(self):
         json_user = {
