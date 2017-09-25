@@ -96,6 +96,26 @@ class User(UserMixin, db.Model):
     lessons = db.relationship('Lesson', backref='user', lazy='dynamic', order_by="Lesson.created")
 
     @staticmethod
+    def import_students():
+        import csv
+        with open('import/students.csv') as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=',')
+            for username, password, teacher in csvreader:
+                teacher = User.query.filter_by(username=teacher).first()
+                u = User(username=username,
+                         password=password,
+                         confirmed=True,
+                         name=username,
+                         role=Role.get('Student'))
+                u.add_teacher(teacher)
+                db.session.add(u)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+            
+
+    @staticmethod
     def generate_fake(count=100):
         from sqlalchemy.exc import IntegrityError
         from random import seed
