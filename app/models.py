@@ -99,9 +99,13 @@ class User(UserMixin, db.Model):
     def import_students():
         from sqlalchemy.exc import IntegrityError
         import csv
-        with open('import/students.csv') as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',')
+        import requests
+        with requests.Session() as s:
+            download = s.get('https://s3.amazonaws.com/gamegen/import/students.csv')
+            csvfile = download.content.decode('utf-8')
+            csvreader = csv.reader(csvfile.splitlines(), delimiter=',')
             for username, password, teacher in csvreader:
+                print(username, password, teacher)
                 teacher = User.query.filter_by(username=teacher).first()
                 u = User(username=username,
                          password=password,
