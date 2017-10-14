@@ -6,7 +6,7 @@ from base64 import b64encode
 import datetime
 from flask import url_for
 from app import create_app, db
-from app.models import User, Role, School, Lesson, Score
+from app.models import User, Role, School, Lesson, Score, Screen
 
 
 class APITestCase(unittest.TestCase):
@@ -546,4 +546,59 @@ class APITestCase(unittest.TestCase):
 
         self.assertEqual(items, expected)
 
+    def test_create_screen(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
 
+        screen = {
+                'name': 'screen1',
+                'action': 'action1',
+                'duration': 12
+        }
+
+        response = self.client.post(
+            url_for('api.create_screen'),
+            headers=self.get_api_headers('john', 'cat'),
+            data=json.dumps(screen))
+        self.assertTrue(response.status_code == 201)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        s = Screen.query.filter_by(name=screen['name']).first()
+
+        self.assertEquals(s.id, data['id'])
+        self.assertEquals(u.id, data['user_id'])
+        self.assertEquals(screen['name'], data['name'])
+        self.assertEquals(screen['action'], data['action'])
+        self.assertEquals(screen['duration'], data['duration'])
+
+
+    def test_get_screen(self):
+        # add a user
+        u = User(username='john', password='cat', confirmed=True)
+        db.session.add(u)
+        db.session.commit()
+
+        screen = {
+                'name': 'screen1',
+                'action': 'action1',
+                'duration': 12
+        }
+
+        s = Screen(user_id=u.id, **screen)
+        db.session.add(s)
+        db.session.commit()
+
+        response = self.client.get(
+            url_for('api.get_screen', id = s.id),
+            headers=self.get_api_headers('john', 'cat'))
+        self.assertTrue(response.status_code == 200)
+        json_response = json.loads(response.data.decode('utf-8'))
+
+        self.assertEquals(json_response['id'], s.id)
+        self.assertEquals(json_response['user_id'], u.id)
+        self.assertEquals(json_response['name'], screen['name'])
+        self.assertEquals(json_response['action'], screen['action'])
+        self.assertEquals(json_response['duration'], screen['duration'])
