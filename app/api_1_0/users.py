@@ -4,7 +4,6 @@ from flask import jsonify, request, current_app, url_for
 from . import api
 from .decorators import permission_required
 from ..models import User, Permission, School, Score
-import pprint
 
 
 @api.route('/users/<string:username>')
@@ -65,5 +64,6 @@ def login():
     data = json.loads(request.data)
     user = User.query.filter_by(username=data["username"]).first()
     if user is not None and user.verify_password(data["password"]):
+        user.save_login_info(request.__dict__)
         return jsonify(user.to_json())
     return 'Unauthorized', 401

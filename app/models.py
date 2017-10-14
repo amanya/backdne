@@ -177,6 +177,13 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def save_login_info(self, request):
+        login_info = LoginInfo(
+                user_id = self.id,
+                remote_addr = request['environ']['REMOTE_ADDR'],
+                user_agent = request['environ']['HTTP_USER_AGENT'])
+        db.session.add(login_info)
+
     def generate_confirmation_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'confirm': self.id})
@@ -604,3 +611,11 @@ class GameData(db.Model):
         object = s3.Object(current_app.config['S3_BUCKET'], 'game_data/{}'.format(self.file_name))
         object.put(Body=content)
 
+
+class LoginInfo(db.Model):
+    __tablename__ = 'login_info'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    remote_addr = db.Column(db.String(32))
+    user_agent = db.Column(db.String(64))
+    created = db.Column(db.DateTime, default=func.now())
