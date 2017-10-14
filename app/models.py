@@ -180,8 +180,8 @@ class User(UserMixin, db.Model):
     def save_login_info(self, request):
         login_info = LoginInfo(
                 user_id = self.id,
-                remote_addr = request['environ']['REMOTE_ADDR'],
-                user_agent = request['environ']['HTTP_USER_AGENT'])
+                remote_addr = request['environ'].get('REMOTE_ADDR', ''),
+                user_agent = request['environ'].get('HTTP_USER_AGENT', ''))
         db.session.add(login_info)
 
     def generate_confirmation_token(self, expiration=3600):
