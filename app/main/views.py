@@ -5,6 +5,7 @@ from flask import render_template, redirect, url_for, abort, flash, request, \
 from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 from sqlalchemy import text
+from collections import defaultdict
 
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm, \
@@ -237,19 +238,66 @@ def school_stats():
 @login_required
 @admin_required
 def user_stats():
-    data = ['user_id|game|score|duration|start_time|end_time']
+    lessons = [
+            'lesson_danger',
+            'lesson_labtools',
+            'lesson_atom_rutherford',
+            'lesson_atom_athomic_number',
+            'lesson_atom_isotops',
+            'lesson_matter1_levels',
+            'lesson_matter1_table',
+            'lesson_matter1_connection',
+            'lesson_matter2_mol',
+            'lesson_matter2_mass',
+            'lesson_matter2_stoichiometry',
+            'lesson_change_reaction',
+            'lesson_change_adjustment',
+            ]
+    lessons_views = [i + '_views' for i in lessons]
+    data = ['school_name|school_id|teacher|user_id|' + '|'.join(lessons_views)]
 
-    for game_type in ["lesson_", "game_", "quiz_"]:
-        sql = text('''
-        SELECT user_id, game, SUM(score) as score, SUM(duration) AS duration, MIN(created) AS start_time, MAX(created) AS end_time FROM scores WHERE game ~ '{}*' GROUP BY game, user_id ORDER BY user_id;
-        '''.format(game_type))
-        result = db.engine.execute(sql)
+    sql = text('''
+        SELECT s.name AS school_name, s.id AS school_id,
+            ( SELECT username FROM users WHERE id = u.teacher_id) AS teacher,
+            u.id AS user_id, le.lesson AS lesson, le.views AS views
+        FROM
+            ( SELECT user_id, lesson, COUNT(id) AS views
+            FROM lessons l
+            GROUP BY lesson, user_id ) AS le
+        JOIN users u
+            ON u.id = le.user_id
+        JOIN users_schools us
+            ON u.id = us.user_id
+        JOIN schools s
+            ON s.id = us.school_id;
+        ''')
+    result = db.engine.execute(sql)
 
-        for row in result:
-            data.append('|'.join([r and str(r) or "0" for r in row]))
+    user_data = defaultdict(dict)
+    lesson_data = defaultdict(dict)
+
+    for row in result:
+        school_name, school_id, teacher, user_id, lesson, views = row 
+        user_data[user_id]['school_name'] = school_name
+        user_data[user_id]['school_id'] = school_id 
+        user_data[user_id]['teacher'] = teacher and teacher or ""
+        user_data[user_id]['user_id'] = user_id
+        lesson_data[user_id][lesson] = views
+
+    for user_id in user_data.keys():
+        obj = user_data[user_id]
+        obj_lesson = lesson_data[user_id]
+        temp_data = [
+            obj['school_name'],
+            str(obj['school_id']),
+            obj['teacher'],
+            str(obj['user_id'])
+        ]
+        temp_data.extend([str(obj_lesson.get(i, 0)) for i in lessons])
+        data.append('|'.join(temp_data))
 
     resp = make_response("\n".join(data))
-    resp.headers['content-type'] = 'text/plain'
+    resp.headers['content-type'] = 'text/plain; charset=utf-8'
     return resp
 
 
