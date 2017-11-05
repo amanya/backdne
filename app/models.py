@@ -94,6 +94,7 @@ class User(UserMixin, db.Model):
 
     scores = db.relationship('Score', backref='user', lazy='dynamic', order_by="Score.created")
     lessons = db.relationship('Lesson', backref='user', lazy='dynamic', order_by="Lesson.created")
+    login_info = db.relationship('LoginInfo', backref='user', lazy='dynamic', order_by="LoginInfo.created", cascade='all, delete-orphan')
 
     @staticmethod
     def import_students():
