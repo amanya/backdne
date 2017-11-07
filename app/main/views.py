@@ -332,7 +332,7 @@ def edit_game_data(id):
 def assets():
     page = request.args.get('page', 1, type=int)
     query = Asset.query
-    pagination = query.order_by(Asset.file_name.desc()).paginate(
+    pagination = query.order_by(Asset.file_name.asc()).paginate(
         page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
         error_out=False)
     assets = pagination.items
