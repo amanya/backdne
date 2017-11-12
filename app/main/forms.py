@@ -34,6 +34,13 @@ class DeleteUserForm(FlaskForm):
         if field.data != self.user.username:
             raise ValidationError('Wrong username')
 
+class DeleteUserStudentsForm(FlaskForm):
+    delete_students = BooleanField('Delete students')
+    submit = SubmitField('Submit')
+
+    def __init__(self, user, *args, **kwargs):
+        super(DeleteUserStudentsForm, self).__init__(*args, **kwargs)
+        self.user = user
 
 class DeleteSchoolForm(FlaskForm):
     check_name = StringField('Repeat school name to delete')
