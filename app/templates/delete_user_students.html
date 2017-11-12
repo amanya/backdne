@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Backend - Delete User Students{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Delete User Students</h1>
+</div>
+<div>
+    <p>If you check "Delete students" the following users, which are <strong>{{ user.username }}</strong>'s students will be deleted. If not, students will remain orphaned.</p>
+</div>
+<div class="col-md-4">
+    {{ wtf.quick_form(form) }}
+</div>
+<div class="user-tabs">
+    {% with users=user.my_students() %}
+    {% include '_users.html' %}
+    {% endwith %}
+</div>
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.users') }}
+</div>
+{% endif %}
+{% endblock %}

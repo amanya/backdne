@@ -8,8 +8,9 @@ from sqlalchemy import text
 from collections import defaultdict
 
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, UserForm, EditSchoolForm, AssetForm, \
-    DeleteUserForm, DeleteSchoolForm, ChangePasswordAdminForm, GameDataForm, DeleteAssetForm
+from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, \
+        UserForm, EditSchoolForm, AssetForm, DeleteUserForm, DeleteSchoolForm, \
+        ChangePasswordAdminForm, GameDataForm, DeleteAssetForm, DeleteUserStudentsForm
 from .. import db
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission, Score, Asset, GameData
@@ -138,11 +139,39 @@ def delete_school(id):
 @admin_required
 def delete_user(id):
     user = User.query.get_or_404(id)
+    delete_students = request.args.get('delete_students')
+    if delete_students == "false":
+        delete_students = False
+    else:
+        delete_students = True
+    if delete_students and user.is_teacher() and len(user.my_students().all()) > 0:
+        return redirect(url_for('.delete_user_students', id=id))
     form = DeleteUserForm(user=user)
     if form.validate_on_submit():
+        if not delete_students:
+            for student in user.my_students():
+                student.teacher_id = None
+                db.session.add(student)
+            db.session.commit()
         db.session.delete(user)
         return redirect(url_for('.users'))
     return render_template('delete_user.html', user=user, form=form)
+
+@main.route('/delete-user-students/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_user_students(id):
+    user = User.query.get_or_404(id)
+    if not user.is_teacher() or not len(user.my_students().all()) > 0:
+        return redirect(url_for('.users'))
+    form = DeleteUserStudentsForm(user=user)
+    if form.validate_on_submit():
+        if form.delete_students.data:
+            for student in user.my_students():
+                db.session.delete(student)
+            db.session.commit()
+        return redirect(url_for('.delete_user', id=id) + '?delete_students=false')
+    return render_template('delete_user_students.html', user=user, form=form)
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
