@@ -94,10 +94,10 @@ class User(UserMixin, db.Model):
 
     scores = db.relationship('Score', backref='user', lazy='dynamic', order_by="Score.created")
     lessons = db.relationship('Lesson', backref='user', lazy='dynamic', order_by="Lesson.created")
-    login_info = db.relationship('LoginInfo', backref='user', lazy='dynamic', order_by="LoginInfo.created", cascade='all, delete-orphan')
+    login_info = db.relationship('LoginInfo', backref='user', lazy='dynamic', order_by="LoginInfo.created", cascade='save-update')
     teacher = db.relationship('User', backref='user', lazy='dynamic', cascade='all')
     schools = db.relationship('School', backref='user', secondary='users_schools', lazy='dynamic', cascade='all')
-    screens = db.relationship('Screen', backref='user', lazy='dynamic', order_by="Screen.created", cascade='all, delete-orphan')
+    screens = db.relationship('Screen', backref='user', lazy='dynamic', order_by="Screen.created", cascade='save-update')
 
     @staticmethod
     def import_students():
