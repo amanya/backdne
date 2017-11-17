@@ -10,7 +10,8 @@ from collections import defaultdict
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, \
         UserForm, EditSchoolForm, AssetForm, DeleteUserForm, DeleteSchoolForm, \
-        ChangePasswordAdminForm, GameDataForm, DeleteAssetForm, DeleteUserStudentsForm
+        ChangePasswordAdminForm, GameDataForm, DeleteAssetForm, DeleteUserStudentsForm, \
+        BatchUsersForm
 from .. import db
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission, Score, Asset, GameData
@@ -109,6 +110,15 @@ def add_user():
         return redirect(url_for('.users'))
     return render_template('edit_profile.html', form=form)
 
+@main.route('/batch-add-users', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def batch_add_users():
+    form = BatchUsersForm()
+    if current_user.can(Permission.CREATE_USERS) and form.validate_on_submit():
+        User.import_students_from_data(form.csv_data.data, delimiter='\t')
+        return redirect(url_for('.users'))
+    return render_template('batch_add_users.html', form=form)
 
 @main.route('/change-password-admin/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -394,7 +404,6 @@ def delete_asset(id):
         db.session.delete(asset)
         return redirect(url_for('.assets'))
     return render_template('delete_asset.html', form=form, asset=asset)
-
 
 @main.route('/sign-s3/')
 @login_required
