@@ -101,28 +101,33 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def import_students():
-        from sqlalchemy.exc import IntegrityError
-        import csv
         import requests
         with requests.Session() as s:
             download = s.get('https://s3.amazonaws.com/gamegen/import/students.csv')
             csvfile = download.content.decode('utf-8')
-            csvreader = csv.reader(csvfile.splitlines(), delimiter=',')
-            for username, password, teacher in csvreader:
-                print(username, password, teacher)
-                teacher = User.query.filter_by(username=teacher).first()
-                u = User(username=username,
-                         password=password,
-                         confirmed=True,
-                         name=username,
-                         role=Role.get('Student'),
-                         teacher=teacher)
-                db.session.add(u)
-                try:
-                    db.session.commit()
-                except IntegrityError:
-                    db.session.rollback()
+            User.import_students_from_data(csvfile, ',')
+
             
+    @staticmethod
+    def import_students_from_data(csv_data, delimiter=','):
+        import csv
+        from sqlalchemy.exc import IntegrityError
+        csvreader = csv.reader(csv_data.splitlines(), delimiter=delimiter)
+        for username, password, teacher in csvreader:
+            print(username, password, teacher)
+            teacher = User.query.filter_by(username=teacher).first()
+            u = User(username=username,
+                     password=password,
+                     confirmed=True,
+                     name=username,
+                     role=Role.get('Student'),
+                     teacher=teacher)
+            db.session.add(u)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+
 
     @staticmethod
     def generate_fake(count=100):

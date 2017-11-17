@@ -108,6 +108,20 @@ class UserForm(FlaskForm):
         self.role.choices = [(role.id, role.name)
                              for role in Role.query.order_by(Role.name).all()]
 
+class BatchUsersForm(FlaskForm):
+    csv_data = TextAreaField('CSV users data', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+    def validate_csv_data(self, field):
+        import csv
+        try:
+            csvreader = csv.reader(field.data.splitlines(), delimiter='\t')
+            for username, password, teacher in csvreader:
+                pass
+        except:
+            raise ValidationError('Invalid CSV format')
+
+
 class SchoolForm(FlaskForm):
     name = StringField('Name of the school', validators=[Length(0, 64)])
     description = PageDownField("Description", validators=[DataRequired()])
