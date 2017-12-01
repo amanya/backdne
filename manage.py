@@ -15,7 +15,7 @@ if os.path.exists('.env'):
         if len(var) == 2:
             os.environ[var[0]] = var[1]
 
-from app import create_app, db
+from app import create_app, db, redis_store
 from app.models import User, Role, Permission, School, GameData
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
@@ -76,6 +76,18 @@ def deploy():
 
     # create user roles
     Role.insert_roles()
+
+
+@manager.command
+def worker():
+    """Execute background tasks"""
+    from rq import Worker, Queue, Connection
+
+    listen = ['high', 'default', 'low']
+
+    with Connection(redis_store):
+        worker = Worker(map(Queue, listen))
+        worker.work()
 
 
 if __name__ == '__main__':

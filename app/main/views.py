@@ -5,14 +5,13 @@ from flask import render_template, redirect, url_for, abort, flash, request, \
 from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 from sqlalchemy import text
-from collections import defaultdict
 
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, \
         UserForm, EditSchoolForm, AssetForm, DeleteUserForm, DeleteSchoolForm, \
         ChangePasswordAdminForm, GameDataForm, DeleteAssetForm, DeleteUserStudentsForm, \
         BatchUsersForm
-from .. import db
+from .. import db, redis_store
 from ..decorators import admin_required
 from ..models import Role, User, School, Permission, Score, Asset, GameData
 
@@ -251,94 +250,22 @@ def edit_school(id):
     form.description.data = school.description
     return render_template('edit_school.html', form=form, user=user)
 
-@main.route('/school-stats')
-@login_required
-@admin_required
-def school_stats():
-    sql = text('''
-    SELECT s.name, teacher_id, t.user_id, duration, total_pages_viewed FROM (
-        SELECT user_id, teacher_id, duration, total_pages_viewed FROM (
-            SELECT user_id, SUM(duration) AS duration, SUM(total_pages_viewed) AS total_pages_viewed FROM lessons WHERE lesson ~ 'lesson_*' GROUP BY user_id
-        ) t JOIN users u ON t.user_id = u.id
-    ) t INNER JOIN users_schools us ON t.user_id = us.user_id INNER JOIN schools s ON us.school_id = s.id;
-    ''')
-    result = db.engine.execute(sql)
-
-    data = ['school|teacher_id|user_id|duration|total_pages_viewed']
-    for row in result:
-        data.append('|'.join([r and str(r) or "0" for r in row]))
-
-    resp = make_response("\n".join(data))
-    resp.headers['content-type'] = 'text/plain'
-    return resp
-
-
 @main.route('/user-stats')
 @login_required
 @admin_required
 def user_stats():
-    lessons = [
-            'lesson_danger',
-            'lesson_labtools',
-            'lesson_atom_rutherford',
-            'lesson_atom_athomic_number',
-            'lesson_atom_isotops',
-            'lesson_matter1_levels',
-            'lesson_matter1_table',
-            'lesson_matter1_connection',
-            'lesson_matter2_mol',
-            'lesson_matter2_mass',
-            'lesson_matter2_stoichiometry',
-            'lesson_change_reaction',
-            'lesson_change_adjustment',
-            ]
-    lessons_views = [i + '_views' for i in lessons]
-    data = ['school_name|school_id|teacher|user_id|' + '|'.join(lessons_views)]
+    from rq import Queue
+    from ..jobs import game_stats
 
-    sql = text('''
-        SELECT s.name AS school_name, s.id AS school_id,
-            ( SELECT username FROM users WHERE id = u.teacher_id) AS teacher,
-            u.id AS user_id, le.lesson AS lesson, le.views AS views
-        FROM
-            ( SELECT user_id, lesson, COUNT(id) AS views
-            FROM lessons l
-            GROUP BY lesson, user_id ) AS le
-        JOIN users u
-            ON u.id = le.user_id
-        JOIN users_schools us
-            ON u.id = us.user_id
-        JOIN schools s
-            ON s.id = us.school_id;
-        ''')
-    result = db.engine.execute(sql)
+    s3_bucket = current_app.config['S3_BUCKET']
+    aws_region = current_app.config['AWS_REGION']
 
-    user_data = defaultdict(dict)
-    lesson_data = defaultdict(dict)
+    q = Queue(connection=redis_store)
+    result = q.enqueue(game_stats.game_stats, aws_region, s3_bucket, timeout=60*30)
 
-    for row in result:
-        school_name, school_id, teacher, user_id, lesson, views = row 
-        user_data[user_id]['school_name'] = school_name
-        user_data[user_id]['school_id'] = school_id 
-        user_data[user_id]['teacher'] = teacher and teacher or ""
-        user_data[user_id]['user_id'] = user_id
-        lesson_data[user_id][lesson] = views
+    job_url = 'https://s3.amazonaws.com/{}/jobs/{}.csv'.format(s3_bucket, result.id)
 
-    for user_id in user_data.keys():
-        obj = user_data[user_id]
-        obj_lesson = lesson_data[user_id]
-        temp_data = [
-            obj['school_name'],
-            str(obj['school_id']),
-            obj['teacher'],
-            str(obj['user_id'])
-        ]
-        temp_data.extend([str(obj_lesson.get(i, 0)) for i in lessons])
-        data.append('|'.join(temp_data))
-
-    resp = make_response("\n".join(data))
-    resp.headers['content-type'] = 'text/plain; charset=utf-8'
-    return resp
-
+    return render_template('game_stats.html', job_url=job_url)
 
 @main.route('/game-data')
 @login_required

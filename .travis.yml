@@ -1,13 +1,12 @@
 language: python
 python:
-- '2.7'
-- '3.5'
+- '3.6'
 install: pip install -r requirements/dev.txt
 script: python manage.py test
 deploy:
   on:
     branch: master
-    python: 3.5
+    python: 3.6
   provider: heroku
   api_key:
     secure: dqiQwtdGMhPj+574lHS2+SqNPhE0UT84s1Zz3LqkfgWvpAdX8lwWiIkxPNA7WjPIsBo/x2VexmAQ7aqngUnguZbzKllOFmeE5uSs7R1euGyoNOC3ssr5jvnkN7OVuq9WhbfaEnHYj0m5fpoM1xRKFBM5NGeqqe0CfupoHCWgH60nZIutWPAuNPVn8lNqbSYuk3SA2/HDR+t8SFNkX4C8uTbAKEzFjLf91Isf+i1LlFTjZf7wz7No8GF/kVFSTP0rZ8I7NnIId1mYls0jkxsROIu5B4to/C9zc++YqgwqdAbYIY2ugNtBbX3GrKhJ2MHkph/sxr+zDevlZY4fGz59ZO81h021h6gxv/Z+SuWkgpwjYbhzf8k0sZBdD/jHECr2kvOfEI6qp5YAbfbCW354VzC3bRHklgGn7ZXj7Xf5bY2vuaqrfgDxvwDB7lZdhFCL9qaaS73zzbUMq86Rqbnee/03SUSHTNVDJxuXrbHuHh3xriVF3qnLA2JHwgTXMd73gA7GeJZ2XVKn0WFQCg6ExgqLQwpJaZrGKP6WCwHvQ0fXh1nbA9vp0OYOADxQxt1aJwwYBlbzlum6PTTa6hjpdqaiwuc5o3inAd2YRtQa3/Z/5tEFnpme7HE0T8yOpbQZdS8gjExyhPGnmY0qWfvABfSsE8XPYROKqCesm3CeEx0=
