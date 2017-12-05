@@ -38,12 +38,14 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:asdf@localhost:5432/backenddev'
+    REDIS_URL = os.environ.get('REDISTOGO_URL', 'redis://localhost:6379')
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
+    REDIS_URL = os.environ.get('REDISTOGO_URL', 'redis://localhost:6379')
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost:5000'
 
@@ -51,6 +53,7 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+    REDIS_URL = os.environ.get('REDISTOGO_URL', 'redis://localhost:6379')
 
     @classmethod
     def init_app(cls, app):
