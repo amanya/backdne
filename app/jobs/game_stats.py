@@ -271,6 +271,42 @@ def _get_total_app_num_accesses(user_id):
     ret = result.fetchone()
     return ret[0] if ret[0] else 0
 
+def _get_school_name(user_id):
+    sql = '''
+    SELECT s.name
+    FROM schools s
+        JOIN users_schools us ON s.id = us.school_id
+        JOIN users u ON u.id = us.user_id
+    WHERE user_id = {}
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    ret = result.fetchone()
+    return ret[0] if ret else ""
+
+def _get_teacher_username(user_id):
+    sql = '''
+    SELECT username
+    FROM users
+    WHERE id = (
+        SELECT teacher_id
+        FROM users
+        WHERE id = {}
+    )
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    ret = result.fetchone()
+    return ret[0] if ret else ""
+
+def _get_username(user_id):
+    sql = '''
+    SELECT username
+    FROM users
+    WHERE id = {}
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    ret = result.fetchone()
+    return ret[0] if ret[0] else ""
+
 def game_stats(aws_region, s3_bucket):
     users = _get_user_ids()
 
@@ -278,15 +314,18 @@ def game_stats(aws_region, s3_bucket):
 
     for user_id in users:
         games_data[user_id]['user_id'] = user_id
+        games_data[user_id]['school'] = _get_school_name(user_id)
+        games_data[user_id]['teacher'] = _get_teacher_username(user_id)
+        games_data[user_id]['username'] = _get_username(user_id)
+        for lesson in _get_lessons():
+            games_data[user_id]['lessons-{}-{}'.format(lesson, 'num_accesses')] = _get_lesson_num_accesses(user_id, lesson)
+            games_data[user_id]['lessons-{}-{}'.format(lesson, 'total_duration')] = _get_lesson_duration(user_id, lesson)
         for game in _get_games():
             games_data[user_id]['games-{}-{}'.format(game, 'first_game_score')] = _get_first_game_score(user_id, game)
             games_data[user_id]['games-{}-{}'.format(game, 'last_game_score')] = _get_last_game_score(user_id, game)
             games_data[user_id]['games-{}-{}'.format(game, 'avg_game_score')] = _get_avg_game_score(user_id, game)
             games_data[user_id]['games-{}-{}'.format(game, 'num_accesses')] = _get_num_accesses(user_id, game)
             games_data[user_id]['games-{}-{}'.format(game, 'total_duration')] = _get_duration(user_id, game)
-        for lesson in _get_lessons():
-            games_data[user_id]['lessons-{}-{}'.format(lesson, 'num_accesses')] = _get_lesson_num_accesses(user_id, lesson)
-            games_data[user_id]['lessons-{}-{}'.format(lesson, 'total_duration')] = _get_lesson_duration(user_id, lesson)
         for quiz in _get_quizes():
             games_data[user_id]['quizes-{}-{}'.format(quiz, 'perc_score')] = _get_quiz_perc_score(user_id, quiz)
             games_data[user_id]['quizes-{}-{}'.format(quiz, 'total_duration')] = _get_quiz_duration(user_id, quiz)
