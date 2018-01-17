@@ -37,6 +37,7 @@ def _get_games():
         'game_matter2_mass',
         'game_matter2_stoichiometry',
         'game_change_reaction',
+        'game_change_adjustment',
     ]
 
 def _get_quizes():
@@ -195,6 +196,26 @@ def _get_screen_duration(user_id, screen):
     ret = result.fetchone()
     return ret[0] if ret[0] else 0
 
+def _get_total_lessons_num_accesses(user_id):
+    sql = '''
+    SELECT COALESCE(SUM(total_pages_viewed), 0)
+    FROM lessons
+    WHERE user_id = {}
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    ret = result.fetchone()
+    return ret[0] if ret else 0
+
+def _get_total_lessons_duration(user_id):
+    sql = '''
+    SELECT COALESCE(SUM(duration), 0)
+    FROM lessons
+    WHERE user_id = {}
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    ret = result.fetchone()
+    return ret[0] if ret else 0
+
 def _get_total_games_num_accesses(user_id):
     sql = '''
     SELECT COUNT(*)
@@ -332,6 +353,8 @@ def game_stats(aws_region, s3_bucket):
         for screen in _get_screens():
             games_data[user_id]['screens-{}-{}'.format(screen, 'perc_score')] = _get_screen_num_accesses(user_id, screen)
             games_data[user_id]['screens-{}-{}'.format(screen, 'total_duration')] = _get_screen_duration(user_id, screen)
+        games_data[user_id]['total_lessons-num_accesses'] = _get_total_lessons_num_accesses(user_id)
+        games_data[user_id]['total_lessons-total_duration'] = _get_total_lessons_duration(user_id)
         games_data[user_id]['total_games-num_accesses'] = _get_total_games_num_accesses(user_id)
         games_data[user_id]['total_games-total_duration'] = _get_total_games_duration(user_id)
         games_data[user_id]['total_games-avg_game_score'] = _get_total_games_avg_game_score(user_id)
