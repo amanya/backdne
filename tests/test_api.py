@@ -331,7 +331,7 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         lesson = {"lesson": "the_lesson", "total_pages_viewed": 1, "clicks_forward": 2, "clicks_backward": 3,
-                  "clicks_menu": 4, "clicks_lesson_repeat": 5, "way_exit": "asdf", "is_finished": True, "duration": 6}
+                  "clicks_menu": 4, "clicks_lesson_repeat": 5, "way_exit": "asdf", "is_finished": True, "time": 6}
 
         # create a lesson
         response = self.client.post(
