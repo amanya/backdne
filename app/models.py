@@ -527,7 +527,7 @@ class Lesson(db.Model):
         clicks_lesson_repeat = json_.get('clicks_lesson_repeat')
         way_exit = json_.get('way_exit')
         is_finished = json_.get('is_finished')
-        duration = json_.get('time')
+        duration = int(float(json_.get('time')))
         if lesson is None or lesson == '':
             raise ValidationError('lesson does not have a valid lesson id')
         return Lesson(lesson=lesson, user_id=user_id, total_pages_viewed=total_pages_viewed,
