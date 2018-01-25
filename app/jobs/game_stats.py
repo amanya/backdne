@@ -11,7 +11,7 @@ def _get_lessons():
             'lesson_danger',
             'lesson_labtools',
             'lesson_atom_rutherford',
-            'lesson_atom_athomic_number',
+            'lesson_atom_atomic_number',
             'lesson_atom_isotops',
             'lesson_matter1_levels',
             'lesson_matter1_table',
