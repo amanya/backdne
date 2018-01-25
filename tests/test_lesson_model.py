@@ -26,7 +26,7 @@ class LessonModelTestCase(unittest.TestCase):
         expected_keys = ['id', 'user_id', 'lesson', 'total_pages_viewed',
                          'clicks_forward', 'clicks_backward', 'clicks_menu',
                          'clicks_lesson_repeat', 'way_exit', 'is_finished',
-                         'duration', 'created']
+                         'time', 'created']
         self.assertEqual(sorted(json_.keys()), sorted(expected_keys))
 
     def test_get_finished_lessons(self):
