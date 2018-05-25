@@ -13,7 +13,7 @@ from .forms import EditProfileForm, EditProfileAdminForm, SchoolForm, \
         BatchUsersForm
 from .. import db, redis_store
 from ..decorators import admin_required
-from ..models import Role, User, School, Permission, Score, Asset, GameData
+from ..models import Role, User, School, Permission, Score, Asset, GameData, UserSchool
 
 
 @main.after_app_request
@@ -55,7 +55,11 @@ def schools():
         db.session.add(school)
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
-    query = School.query
+    if not current_user.is_administrator():
+        query = School.query.join(UserSchool)\
+            .filter(UserSchool.user_id == current_user.id)
+    else:
+        query = School.query
     pagination = query.order_by(School.created.desc()).paginate(
         page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
         error_out=False)
@@ -85,7 +89,10 @@ def users():
         db.session.add(user)
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
-    query = User.query
+    if current_user.is_teacher():
+        query = User.query.filter(User.teacher_id == current_user.id)
+    else:
+        query = User.query
     pagination = query.order_by(User.created.desc()).paginate(
         page, per_page=current_app.config['BACKEND_POSTS_PER_PAGE'],
         error_out=False)
