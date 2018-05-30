@@ -441,12 +441,12 @@ class School(db.Model):
 class Score(db.Model):
     __tablename__ = 'scores'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     game = db.Column(db.String(64), unique=False, index=True)
     state = db.Column(db.String(64), unique=False)
     score = db.Column(db.Integer)
     max_score = db.Column(db.Integer)
-    is_exam = db.Column(db.Boolean, default=False)
+    is_exam = db.Column(db.Boolean, default=False, index=True)
     duration = db.Column(db.Integer)
     created = db.Column(db.DateTime, default=func.now())
 
@@ -504,8 +504,8 @@ class Score(db.Model):
 class Lesson(db.Model):
     __tablename__ = 'lessons'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    lesson = db.Column(db.String(64), unique=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    lesson = db.Column(db.String(64), unique=False, index=True)
     total_pages_viewed = db.Column(db.Integer)
     clicks_forward = db.Column(db.Integer)
     clicks_backward = db.Column(db.Integer)
@@ -637,8 +637,8 @@ class LoginInfo(db.Model):
 class Screen(db.Model):
     __tablename__ = 'screens'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    name = db.Column(db.String(64), unique=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    name = db.Column(db.String(64), unique=False, index=True)
     action = db.Column(db.String(64), unique=False)
     duration = db.Column(db.Integer)
     created = db.Column(db.DateTime, default=func.now())
