@@ -259,7 +259,6 @@ def edit_school(id):
 
 @main.route('/user-stats')
 @login_required
-@admin_required
 def user_stats():
     from rq import Queue
     from ..jobs import game_stats
