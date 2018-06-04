@@ -268,7 +268,16 @@ def user_stats():
     aws_region = current_app.config['AWS_REGION']
 
     q = Queue(connection=redis_store)
-    result = q.enqueue(game_stats.game_stats, aws_region, s3_bucket, timeout=60*30)
+
+    user_role = ''
+    if current_user.is_student():
+        user_role = 'student'
+    if current_user.is_teacher():
+        user_role = 'teacher'
+    if current_user.is_administrator():
+        user_role = 'administrator'
+
+    result = q.enqueue(game_stats.game_stats, aws_region, s3_bucket, current_user.id, user_role, timeout=59*30)
 
     job_url = 'https://s3.amazonaws.com/{}/jobs/{}.csv'.format(s3_bucket, result.id)
 
