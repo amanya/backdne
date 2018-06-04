@@ -64,6 +64,14 @@ def _get_screens():
         'DressingRoom',
     ]
 
+def _get_teacher_user_ids(user_id):
+    sql = '''
+    SELECT id
+    FROM users
+    WHERE teacher_id = {}
+    '''.format(user_id)
+    result = db.engine.execute(sql)
+    return list(map(lambda x: x[0], result))
 
 def _get_user_ids():
     sql = '''
@@ -328,8 +336,13 @@ def _get_username(user_id):
     ret = result.fetchone()
     return ret[0] if ret[0] else ""
 
-def game_stats(aws_region, s3_bucket):
-    users = _get_user_ids()
+def game_stats(aws_region, s3_bucket, user_id, user_role):
+    users = []
+
+    if user_role == 'teacher':
+        users = _get_teacher_user_ids(user_id)
+    else:
+        users = _get_user_ids()
 
     games_data = defaultdict(dict)
 
