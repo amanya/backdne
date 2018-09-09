@@ -217,6 +217,17 @@ class APITestCase(unittest.TestCase):
         )
         self.assertTrue(response.status_code == 401)
 
+    def test_cant_login_if_user_disabled(self):
+        u = User(username='john', password='cat', confirmed=True, enabled=False)
+        db.session.add(u)
+        db.session.commit()
+
+        response = self.client.post(
+            url_for('api.login'),
+            data=json.dumps({'username': 'john', 'password': 'cat'})
+        )
+        self.assertTrue(response.status_code == 401)
+
     def test_create_score(self):
         # add a user
         u = User(username='john', password='cat', confirmed=True,
