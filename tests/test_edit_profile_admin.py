@@ -19,6 +19,7 @@ class EditProfileAdminTestCase(unittest.TestCase):
         self.client = self.app.test_client(use_cookies=True)
         u = User(username='foo', password='bar')
         u.confirmed = True
+        u.enabled = True
         r = Role.query.filter_by(name='Administrator').first()
         u.role = r
         db.session.add(u)
@@ -52,6 +53,7 @@ class EditProfileAdminTestCase(unittest.TestCase):
             'username': u1.username,
             'email': u1.email,
             'confirmed': u1.confirmed,
+            'enabled': u1.enabled,
             'role': u1.role_id,
             'name': u1.name,
         }, follow_redirects=True)
@@ -60,6 +62,7 @@ class EditProfileAdminTestCase(unittest.TestCase):
             'username': u2.username,
             'email': u2.email,
             'confirmed': u2.confirmed,
+            'enabled': u2.enabled,
             'role': u2.role_id,
             'name': u2.name,
         }, follow_redirects=True)

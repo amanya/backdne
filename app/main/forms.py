@@ -62,6 +62,7 @@ class EditProfileAdminForm(FlaskForm):
                                               'Usernames must have only letters, '
                                               'numbers, dots or underscores')])
     confirmed = BooleanField('Confirmed')
+    enabled = BooleanField('Enabled')
     role = SelectField('Role', coerce=int)
     name = StringField('Real name', validators=[Length(0, 64)])
     teacher = SelectField('Teacher', coerce=int)
