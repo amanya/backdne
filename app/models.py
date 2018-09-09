@@ -82,6 +82,7 @@ class User(UserMixin, db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
+    enabled = db.Column(db.Boolean, default=True)
     tutorial_completed = db.Column(db.Boolean, default=False)
     exam_points = db.Column(db.Integer, default=0)
     name = db.Column(db.String(64))
