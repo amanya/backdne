@@ -111,6 +111,7 @@ def add_user():
         user.password = form.password.data
         user.role = Role.query.get(form.role.data)
         user.confirmed = True
+        user.enabled = True
         db.session.add(user)
         flash('The user {} has been created'.format(user.username))
         return redirect(url_for('.users'))
@@ -215,6 +216,7 @@ def edit_profile_admin(id):
             user.email = form.email.data
         user.username = form.username.data
         user.confirmed = form.confirmed.data
+        user.enabled = form.enabled.data
         user.role = Role.query.get(form.role.data)
         user.name = form.name.data
         user.add_to_schools(form.schools.data)
@@ -226,6 +228,7 @@ def edit_profile_admin(id):
     form.email.data = user.email
     form.username.data = user.username
     form.confirmed.data = user.confirmed
+    form.enabled.data = user.enabled
     form.role.data = user.role_id
     form.name.data = user.name
     form.schools.data = [s.id for s in user.schools]
