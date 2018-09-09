@@ -60,10 +60,9 @@ def get_user_game_max_score(username, game):
 
 @api.route('/login', methods=['POST'])
 def login():
-    print(request.__dict__)
     data = json.loads(request.data)
     user = User.query.filter_by(username=data["username"]).first()
-    if user is not None and user.verify_password(data["password"]):
+    if user is not None and user.enabled and user.verify_password(data["password"]):
         user.save_login_info(request.__dict__)
         return jsonify(user.to_json())
     return 'Unauthorized', 401
