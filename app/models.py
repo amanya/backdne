@@ -8,7 +8,12 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy import Index
 from sqlalchemy import func
 from sqlalchemy import inspect
+from sqlalchemy.exc import IntegrityError
+import json
+import string
+import random
 from werkzeug.security import generate_password_hash, check_password_hash
+from .email import send_email
 
 from app.exceptions import ValidationError
 from . import db, login_manager
@@ -73,6 +78,97 @@ class UserSchool(db.Model):
     def __repr__(self):
         return '<UserSchool {%r} {%r}>' % (self.user.name, self.school.name)
 
+class IosDeviceInfo(db.Model):
+    __tablename__ = "ios_device_info"
+    id = db.Column(db.String(64), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    app_store_validated = db.Column(db.Boolean, default=False)
+    payload = db.Column(db.Text(), default="")
+    created = db.Column(db.DateTime, default=func.now())
+    updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+
+    @staticmethod
+    def from_json(data):
+        pass
+
+    def get_user(self):
+        return User.query.get(self.user_id)
+
+    @staticmethod
+    def create_or_retrieve(data):
+        ios_device_info = IosDeviceInfo.query.get(data['duid'])
+
+        user = None
+
+        if not ios_device_info:
+            user_id, password = IosDeviceInfo.create_user_for_duid()
+
+            ios_device_info = IosDeviceInfo(
+                id=data['duid'],
+                user_id=user_id,
+                app_store_validated=False,
+                payload=json.dumps(
+                    {
+                        'deviceModel': data['deviceModel'],
+                        'deviceType': data['deviceType'],
+                        'deviceName': data['deviceName'],
+                        'platform': data['platform'],
+                        'operatingSystem': data['operatingSystem'],
+                        'systemMemorySize': data['systemMemorySize'],
+                        'graphics': data['graphics']
+                    }
+                )
+            )
+
+            db.session.add(ios_device_info)
+
+            db.session.commit()
+
+            user = ios_device_info.get_user()
+
+            for receiver in current_app.config['MAIL_RECEIVERS']:
+                send_email(
+                    receiver,
+                    'New iOS user created',
+                    '/mail/new_ios_user',
+                    username=user.username
+                )
+
+        else:
+            password = \
+                ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(8))
+
+            user = ios_device_info.get_user()
+            user.password = password
+            db.session.add(user)
+            db.session.commit()
+
+        return (user, password)
+
+
+    @staticmethod
+    def create_user_for_duid():
+        username = \
+            ''.join(random.SystemRandom().choice(string.ascii_lowercase) for _ in range(3)) + \
+            ''.join(random.SystemRandom().choice(string.digits) for _ in range(3))
+
+        password = \
+            ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(8))
+
+        user = User(email='',
+                    username=username,
+                    password=password,
+                    confirmed=True,
+                    name=username,
+                    role=Role.get('student'))
+        db.session.add(user)
+        db.session.commit()
+
+        return (user.id, password)
+
+
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -115,7 +211,6 @@ class User(UserMixin, db.Model):
         from sqlalchemy.exc import IntegrityError
         csvreader = csv.reader(csv_data.splitlines(), delimiter=delimiter)
         for username, password, teacher in csvreader:
-            print(username, password, teacher)
             teacher = User.query.filter_by(username=teacher).first()
             u = User(username=username,
                      password=password,

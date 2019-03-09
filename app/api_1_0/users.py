@@ -3,7 +3,7 @@ from flask import jsonify, request, current_app, url_for
 
 from . import api
 from .decorators import permission_required
-from ..models import User, Permission, School, Score
+from ..models import User, Permission, School, Score, IosDeviceInfo
 
 
 @api.route('/users/<string:username>')
@@ -66,3 +66,14 @@ def login():
         user.save_login_info(request.__dict__)
         return jsonify(user.to_json())
     return 'Unauthorized', 401
+
+@api.route('/user_app_store', methods=['POST'])
+def user_app_store():
+    data = json.loads(request.data)
+    user, password = IosDeviceInfo.create_or_retrieve(data)
+    return jsonify(
+        {
+            'username': user.username,
+            'password': password
+        }
+    )

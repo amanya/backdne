@@ -26,6 +26,7 @@ class Config:
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     CORS_HEADERS = 'Content-Type'
+    MAIL_RECEIVERS = os.environ.get('MAIL_RECEIVERS', '').split(",")
 
     @staticmethod
     def init_app(app):
@@ -38,7 +39,7 @@ class DevelopmentConfig(Config):
     # SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:asdf@localhost:5432/backenddev'
+    SQLALCHEMY_DATABASE_URI = 'postgresql:///albert'
     REDIS_URL = os.environ.get('REDISTOGO_URL', 'redis://localhost:6379')
 
 

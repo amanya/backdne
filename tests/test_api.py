@@ -613,3 +613,48 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(json_response['name'], screen['name'])
         self.assertEquals(json_response['action'], screen['action'])
         self.assertEquals(json_response['duration'], screen['duration'])
+
+    def test_user_app_store(self):
+        response = self.client.post(
+            url_for('api.user_app_store'),
+            data=json.dumps(
+                {
+                    'duid': 'pepe',
+                    'deviceModel': 'a',
+                    'deviceType': 'b',
+                    'deviceName': 'c',
+                    'platform': 'd',
+                    'operatingSystem': 'e',
+                    'systemMemorySize': 'f',
+                    'graphics': 'g',
+                }
+            )
+        )
+
+        self.assertTrue(response.status_code == 200)
+
+        data_first = json.loads(response.data)
+
+        response = self.client.post(
+            url_for('api.user_app_store'),
+            data=json.dumps(
+                {
+                    'duid': 'pepe',
+                    'deviceModel': 'a',
+                    'deviceType': 'b',
+                    'deviceName': 'c',
+                    'platform': 'd',
+                    'operatingSystem': 'e',
+                    'systemMemorySize': 'f',
+                    'graphics': 'g',
+                }
+            )
+        )
+
+        self.assertTrue(response.status_code == 200)
+
+        data_second = json.loads(response.data)
+
+        self.assertEqual(data_first["username"], data_second["username"])
+        self.assertNotEqual(data_first["password"], data_second["password"])
+
